@@ -202,62 +202,62 @@ impl<'a, P: Position> CountArrayView<'a, P> {
     
     // ================================================
     // For plain text
-    //  - using text
-    pub fn get_initial_pos_range_and_idx_of_text(
+    //  - using pattern
+    pub fn get_initial_pos_range_and_idx_of_pattern(
         &self,
-        text: &[u8],
+        pattern: &[u8],
         encoding_table: &EncodingTable,
     ) -> ((P, P), usize) {
-        let pattern_len = text.len();
+        let pattern_len = pattern.len();
         if pattern_len < self.lookup_table_kmer_size {
-            let start_idx = self.get_idx_of_kmer_count_table_of_text(text, encoding_table);
+            let start_idx = self.get_idx_of_kmer_count_table_of_pattern(pattern, encoding_table);
             let gap_btw_unsearched_kmer = self.kmer_multiplier[pattern_len - 1] - 1;
             let end_idx = start_idx + gap_btw_unsearched_kmer;
 
             let pos_range = (self.kmer_count_table[start_idx -1], self.kmer_count_table[end_idx]);
             (pos_range, 0)
         } else {
-            let sliced_text = &text[text.len() - self.lookup_table_kmer_size ..];
-            let start_idx = self.get_idx_of_kmer_count_table_of_text(sliced_text, encoding_table);
+            let sliced_pattern = &pattern[pattern.len() - self.lookup_table_kmer_size ..];
+            let start_idx = self.get_idx_of_kmer_count_table_of_pattern(sliced_pattern, encoding_table);
 
             let pos_range = (self.kmer_count_table[start_idx -1], self.kmer_count_table[start_idx]);
             (pos_range, pattern_len - self.lookup_table_kmer_size)
         }
     }
-    fn get_idx_of_kmer_count_table_of_text(
+    fn get_idx_of_kmer_count_table_of_pattern(
         &self,
-        sliced_text: &[u8],
+        sliced_pattern: &[u8],
         encoding_table: &EncodingTable,
     ) -> usize {
-        sliced_text.iter().zip(self.kmer_multiplier.iter())
+        sliced_pattern.iter().zip(self.kmer_multiplier.iter())
             .map(|(&sym, &mul_of_pos)| {
                 (encoding_table.idx_of(sym) + 1) as usize * mul_of_pos
             }).sum()
     }
     //  - use reverse iter
-    pub fn get_initial_pos_range_and_idx_of_text_rev_iter<I: Iterator<Item = u8>>(
+    pub fn get_initial_pos_range_and_idx_of_pattern_rev_iter<I: Iterator<Item = u8>>(
         &self,
-        text_rev_iter: &mut I,
+        pattern_rev_iter: &mut I,
         encoding_table: &EncodingTable,
     ) -> (P, P) {
-        let mut sliced_text_size = 0;
+        let mut sliced_pattern_size = 0;
         let mut start_idx= 0;
 
-        while sliced_text_size < self.lookup_table_kmer_size {
-            match text_rev_iter.next() {
+        while sliced_pattern_size < self.lookup_table_kmer_size {
+            match pattern_rev_iter.next() {
                 Some(sym) => {
-                    sliced_text_size += 1;
+                    sliced_pattern_size += 1;
                     start_idx += (encoding_table.idx_of(sym) + 1) as usize * self.kmer_multiplier[
-                        self.kmer_multiplier.len() - sliced_text_size as usize
+                        self.kmer_multiplier.len() - sliced_pattern_size as usize
                     ];
                 },
                 None => {
                     // The pattern length can be smaller than the k-mer size.
                     // Multiply by chr_with_pidx_count.pow(self.kmer_size - sliced_pattern_size).
                     // Here, chr_with_pidx_count = self.count_table.len().
-                    start_idx *= self.count_array.len().pow((self.lookup_table_kmer_size - sliced_text_size) as u32);
+                    start_idx *= self.count_array.len().pow((self.lookup_table_kmer_size - sliced_pattern_size) as u32);
 
-                    let gap_btw_unsearched_kmer = self.kmer_multiplier[sliced_text_size as usize - 1] - 1;
+                    let gap_btw_unsearched_kmer = self.kmer_multiplier[sliced_pattern_size as usize - 1] - 1;
                     let end_idx = start_idx + gap_btw_unsearched_kmer;
 
                     let pos_range = (
@@ -311,24 +311,24 @@ impl<'a, P: Position> CountArrayView<'a, P> {
         &self,
         indices_rev_iter: &mut I,
     ) -> (P, P) {
-        let mut sliced_text_size = 0;
+        let mut sliced_pattern_size = 0;
         let mut start_idx= 0;
 
-        while sliced_text_size < self.lookup_table_kmer_size {
+        while sliced_pattern_size < self.lookup_table_kmer_size {
             match indices_rev_iter.next() {
                 Some(idx) => {
-                    sliced_text_size += 1;
+                    sliced_pattern_size += 1;
                     start_idx += (idx + 1) as usize * self.kmer_multiplier[
-                        self.kmer_multiplier.len() - sliced_text_size as usize
+                        self.kmer_multiplier.len() - sliced_pattern_size as usize
                     ];
                 },
                 None => {
                     // The pattern length can be smaller than the k-mer size.
                     // Multiply by chr_with_pidx_count.pow(self.kmer_size - sliced_pattern_size).
                     // Here, chr_with_pidx_count = self.count_table.len().
-                    start_idx *= self.count_array.len().pow((self.lookup_table_kmer_size - sliced_text_size) as u32);
+                    start_idx *= self.count_array.len().pow((self.lookup_table_kmer_size - sliced_pattern_size) as u32);
 
-                    let gap_btw_unsearched_kmer = self.kmer_multiplier[sliced_text_size as usize - 1] - 1;
+                    let gap_btw_unsearched_kmer = self.kmer_multiplier[sliced_pattern_size as usize - 1] - 1;
                     let end_idx = start_idx + gap_btw_unsearched_kmer;
 
                     let pos_range = (

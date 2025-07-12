@@ -35,7 +35,7 @@ fn assert_config_invariance<P: Position, B: Block>(
 
     let fm_index = FmIndex::<P, B>::load(&blob).unwrap();
 
-    let mut result: Vec<u64> = fm_index.locate_text(pattern).into_iter().map(|x| x.as_u64()).collect();
+    let mut result: Vec<u64> = fm_index.locate_pattern(pattern).into_iter().map(|x| x.as_u64()).collect();
     result.sort();
     assert_eq!(&result, answer);
 }
@@ -78,7 +78,7 @@ fn test_config_invariance() {
             let mut blob: Vec<u8> = vec![0; blob_size];
             base_builder.build(text.clone(), &mut blob).unwrap();
             let base_fm_index = FmIndex::<u32, Block4<u32>>::load(&blob).unwrap();
-            let mut answer: Vec<u64> = base_fm_index.locate_text(&pattern).into_iter().map(|x| x.as_u64()).collect();
+            let mut answer: Vec<u64> = base_fm_index.locate_pattern(&pattern).into_iter().map(|x| x.as_u64()).collect();
             answer.sort();
         
             macro_rules! test_type_of {

@@ -1,8 +1,9 @@
 use super::{FmIndex, Position, Block};
 
-mod plain_text;
-mod symbol_indices;
-
+// Plain text slice
+mod pattern;
+// Raw indices of each symbol in the pattern
+mod indices;
 
 impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
     fn get_locations(&self, pos_range: (P, P)) -> Vec<P> {

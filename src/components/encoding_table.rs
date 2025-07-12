@@ -23,6 +23,10 @@ impl EncodingTable {
     pub fn idx_of(&self, sym: u8) -> u8 {
         unsafe { *self.0.get_unchecked(sym as usize) }
     }
+
+    pub fn get_encoding_table(&self) -> &[u8] {
+        &self.0
+    }
 }
 
 impl Header for EncodingTable {}

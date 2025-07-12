@@ -1,6 +1,5 @@
 use super::{FmIndex, Position, Block};
 
-/// Locate pattern using plain text
 impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
     pub fn count_indices(&self, indices: &[u8]) -> P {
         let pos_range = self.get_pos_range_of_indices(indices);

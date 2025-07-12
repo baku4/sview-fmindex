@@ -30,15 +30,15 @@ let fm_index = FmIndex::<u32, Block2<u64>>::load(&blob[..]).unwrap();
 // (3) Match with pattern
 let pattern = b"TA";
 //   - count
-let count = fm_index.count_text(pattern);
+let count = fm_index.count_pattern(pattern);
 assert_eq!(count, 2);
 //   - locate
-let mut locations = fm_index.locate_text(pattern);
+let mut locations = fm_index.locate_pattern(pattern);
 locations.sort();  // The locations may not be in order.
 assert_eq!(locations, vec![5,18]);
 // All unindexed characters are treated as the same character.
 // In the text, X, Y, and Z can match any other unindexed character
-let mut locations = fm_index.locate_text(b"UNDEF");
+let mut locations = fm_index.locate_pattern(b"UNDEF");
 locations.sort();
 // Using the b"XXXXX", b"YYYYY", or b"!@#$%" gives the same result.
 assert_eq!(locations, vec![25,26]);

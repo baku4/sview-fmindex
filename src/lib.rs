@@ -28,6 +28,8 @@ mod load_from_blob;
 pub use load_from_blob::LoadError;
 //  - Count & locate pattern
 mod locate;
+//  - Get debug info
+mod debug;
 
 #[cfg(test)]
 mod tests;

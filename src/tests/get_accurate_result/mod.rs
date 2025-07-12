@@ -46,7 +46,7 @@ fn assert_accurate_fm_index<P: Position, B: Block>(
     let fm_index = FmIndex::<P, B>::load(&blob).unwrap();
 
     patterns.iter().zip(answers.iter()).for_each(|(pattern, answer)| {
-        let mut result: Vec<u64> = fm_index.locate_text(pattern).into_iter().map(|x| x.as_u64()).collect();
+        let mut result: Vec<u64> = fm_index.locate_pattern(pattern).into_iter().map(|x| x.as_u64()).collect();
         result.sort();
         assert_eq!(&result, answer);
     });

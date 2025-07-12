@@ -42,8 +42,8 @@ fn assert_locate_consistency<P: Position, B: Block>(
 
     patterns.iter().for_each(|pattern| {
         // Test count methods
-        let count_text = fm_index.count_text(pattern);
-        let count_text_rev_iter = fm_index.count_text_rev_iter(pattern.iter().rev().cloned());
+        let count_text = fm_index.count_pattern(pattern);
+        let count_text_rev_iter = fm_index.count_pattern_rev_iter(pattern.iter().rev().cloned());
         
         // Convert pattern to indices
         let pattern_indices: Vec<u8> = pattern.iter().map(|&c| encoding_table.idx_of(c)).collect();
@@ -56,10 +56,10 @@ fn assert_locate_consistency<P: Position, B: Block>(
         assert_eq!(count_text, count_indices_rev_iter, "Count methods should return same result for pattern: {:?}", pattern);
 
         // Test locate methods
-        let mut locate_text = fm_index.locate_text(pattern);
+        let mut locate_text = fm_index.locate_pattern(pattern);
         locate_text.sort();
         
-        let mut locate_text_rev_iter = fm_index.locate_text_rev_iter(pattern.iter().rev().cloned());
+        let mut locate_text_rev_iter = fm_index.locate_pattern_rev_iter(pattern.iter().rev().cloned());
         locate_text_rev_iter.sort();
         
         let mut locate_indices = fm_index.locate_indices(&pattern_indices);
