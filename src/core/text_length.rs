@@ -23,8 +23,6 @@ pub trait Position:
     + zerocopy::FromBytes
     + zerocopy::IntoBytes
     + zerocopy::Immutable
-    + bytemuck::Pod
-    + bytemuck::Zeroable
     + capwriter::Save
     + capwriter::Load
     + capwriter::AsyncSave
@@ -62,8 +60,6 @@ pub trait Position:
     + zerocopy::FromBytes
     + zerocopy::IntoBytes
     + zerocopy::Immutable
-    + bytemuck::Pod
-    + bytemuck::Zeroable
     + capwriter::Save
     + capwriter::Load
 {

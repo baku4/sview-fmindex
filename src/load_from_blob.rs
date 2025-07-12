@@ -69,7 +69,7 @@ impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
 
         Ok(Self {
             magic_number,
-            chr_encoding_table,
+            encoding_table: chr_encoding_table,
             count_array_header,
             suffix_array_header,
             bwm_header,

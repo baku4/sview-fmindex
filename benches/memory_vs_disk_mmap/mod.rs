@@ -73,7 +73,7 @@ pub fn bench_memory_vs_disk_mmap_locate<P: Position, B: Block + 'static>(c: &mut
         3, // ltks
     ).unwrap();
     
-    let blob_size = builder.blob_aligned_size();
+    let blob_size = builder.blob_size();
     let mut blob: Vec<u8> = vec![0; blob_size];
     builder.build(text, &mut blob).unwrap();
     

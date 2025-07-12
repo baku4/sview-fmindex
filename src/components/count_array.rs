@@ -73,6 +73,7 @@ impl CountArrayHeader {
             kmer_multiplier_len,
             kmer_count_table_len,
         }
+
     }
     pub fn count_and_encode_text<P: Position, A: Aligned>(
         &self,

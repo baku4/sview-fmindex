@@ -6,13 +6,13 @@ mod components;
 pub use components::{Block, blocks}; // Export to crate root
 // Builder for FmIndex
 mod builder;
-pub use builder::{FmIndexBuilder, BuildError}; // Export to crate root
+pub use builder::{FmIndexBuilder, BuildError, build_config}; // Export to crate root
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct FmIndex<'a, P: Position, B: Block> {
     // headers
     magic_number: components::MagicNumber,
-    chr_encoding_table: components::ChrEncodingTable,
+    encoding_table: components::ChrEncodingTable,
     count_array_header: components::CountArrayHeader,
     suffix_array_header: components::SuffixArrayHeader,
     bwm_header: components::BwmHeader,
@@ -26,7 +26,7 @@ pub struct FmIndex<'a, P: Position, B: Block> {
 //  - Load from blob
 mod load_from_blob;
 pub use load_from_blob::LoadError;
-// Core functionality
+//  - Count & locate pattern
 mod locate;
 
 #[cfg(test)]

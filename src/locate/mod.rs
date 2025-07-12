@@ -16,7 +16,7 @@ impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
     fn get_pos_range(&self, pattern: &[u8]) -> (P, P) {
         let (mut pos_range, mut idx) = self.count_array_view.get_initial_pos_range_and_idx_of_pattern(
             pattern,
-            &self.chr_encoding_table,
+            &self.encoding_table,
         );
         // LF mapping
         while pos_range.0 < pos_range.1 && idx > 0 {
@@ -27,7 +27,7 @@ impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
         pos_range
     }
     fn next_pos_range(&self, pos_range: (P, P), chr: u8) -> (P, P) {
-        let chridx = self.chr_encoding_table.idx_of(chr);
+        let chridx = self.encoding_table.idx_of(chr);
         let precount = self.count_array_view.get_precount(chridx as usize);
         let start_rank = self.bwm_view.get_next_rank(pos_range.0, chridx);
         let end_rank = self.bwm_view.get_next_rank(pos_range.1, chridx);

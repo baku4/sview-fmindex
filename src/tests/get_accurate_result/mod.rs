@@ -1,6 +1,7 @@
 use crate::Position;
 use crate::{
     FmIndex, FmIndexBuilder,
+    build_config::{LookupTableConfig, SuffixArrayConfig},
     Block, blocks::{Block2, Block3, Block4, Block5, Block6},
 };
 use crate::tests::{
@@ -32,13 +33,12 @@ fn assert_accurate_fm_index<P: Position, B: Block>(
         return;
     }
     let characters_by_index = chr_list.chunks(1).map(|c| c).collect::<Vec<_>>();
-    let builder = FmIndexBuilder::<P, B>::init(
-        text.len(),
-        &characters_by_index,
-        sasr as u32,
-        ltks,
-    ).unwrap();
-    let blob_size = builder.blob_aligned_size();
+    
+    let builder = FmIndexBuilder::<P, B>::init(text.len(), &characters_by_index).unwrap()
+        .set_lookup_table_config(LookupTableConfig::KmerSize(ltks as u32)).unwrap()
+        .set_suffix_array_config(SuffixArrayConfig::Compressed(sasr as u32)).unwrap();
+
+    let blob_size = builder.blob_size();
     let mut blob: Vec<u8> = vec![0; blob_size];
 
     builder.build(text, &mut blob).unwrap();

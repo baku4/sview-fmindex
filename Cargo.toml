@@ -5,23 +5,26 @@ authors = ["baku4 <bahkhun@gmail.com>"]
 edition = "2024"
 
 [dependencies]
-capwriter = { version = "0.4.2", default-features = false }
-byteorder = "1.5"
-bytemuck = { version = "1.22", features = [ "derive" ] }
-zerocopy = { version = "0.8", features = ["derive"] }
-num-traits = "0.2"
 thiserror = "2"
-libdivsufsort-rs = { version = "0.1.4", optional = true }
-tokio = { version = "1", default-features = false, features=["io-util"], optional = true }
+num-traits = "0.2"
 
+# manage blob
+capwriter = { version = "0.4.2", default-features = false }
+zerocopy = { version = "0.8", features = ["derive"] }
+byteorder = "1.5"
 memmap2 = "0.9"
 
-# for BWT with "bio" crate
+# burrow-wheeler transform
+libdivsufsort-rs = { version = "0.1.4", optional = true }
+# with "bio" crate
 vec_map = "0.8"
 bit-set = "0.5"
 num-integer = "0.1"
 bv = "0.11.0"
 fxhash = "0.2"
+
+# async io
+tokio = { version = "1", default-features = false, features=["io-util"], optional = true }
 
 [dev-dependencies]
 crate_fm_index = { package = "fm-index", version = "0.1" }
