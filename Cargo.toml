@@ -1,0 +1,53 @@
+[package]
+name = "lt-fm-index"
+version = "0.7.0"
+authors = ["baku4 <bahkhun@gmail.com>"]
+edition = "2024"
+rust-version = "1.85.1"
+description = "FM-index using k-mer lookup table for exact pattern matching"
+readme = "README.md"
+repository = "https://github.com/baku4/lt-fm-index/"
+license = "MIT"
+keywords = ["fm-index", "bwt", "pattern_matching", "bio"]
+categories = ["science", "algorithms"]
+
+[dependencies]
+capwriter = { version = "0.4.2", default-features = false }
+byteorder = "1.5"
+bytemuck = { version = "1.22", features = [ "derive" ] }
+num-traits = "0.2"
+thiserror = "2"
+libdivsufsort-rs = { version = "0.1.4", optional = true }
+tokio = { version = "1", default-features = false, features=["io-util"], optional = true }
+
+# for BWT with "bio" crate
+vec_map = "0.8"
+bit-set = "0.5"
+num-integer = "0.1"
+bv = "0.11.0"
+fxhash = "0.2"
+
+[dev-dependencies]
+crate_fm_index = { package = "fm-index", version = "0.1" }
+rand = "0.9"
+criterion = "0.3.5"
+tokio = { version = "1", default-features = false, features = ["io-util", "rt", "macros", "rt-multi-thread"] }
+
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+getrandom = { version = "0.2.15", features = ["js"] }
+
+[[bench]]
+name = "benchmark"
+harness = false
+
+[features]
+default = []
+fastbwt = ["libdivsufsort-rs"]
+async-io = [
+    "dep:tokio",
+    "capwriter/async-tokio"
+]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
