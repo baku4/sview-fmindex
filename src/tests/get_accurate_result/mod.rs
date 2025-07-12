@@ -1,5 +1,5 @@
 use crate::Position;
-use crate::new_algorithm::{
+use crate::{
     FmIndex, FmIndexBuilder,
     Block, blocks::{Block2, Block3, Block4, Block5, Block6},
 };

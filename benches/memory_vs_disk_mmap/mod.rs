@@ -3,11 +3,8 @@ use criterion::{
     PlotConfiguration, AxisScale,
 };
 use sview_fmindex::{
-    Position,
-    new_algorithm::{
-        FmIndex, FmIndexBuilder, Block,
-        blocks::{Block2, Block3, Block4, Block5, Block6},
-    },
+    FmIndex, FmIndexBuilder, Position, Block,
+    blocks::{Block2, Block3, Block4, Block5, Block6},
 };
 use super::random_data::{
     gen_rand_chr_list,

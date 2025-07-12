@@ -1,12 +1,15 @@
 use std::marker::PhantomData;
 
-use super::{
+use crate::{
     // traits
-    Position, Block, Header, View,
-    // headers
-    MagicNumber, ChrEncodingTable, CountArrayHeader, SuffixArrayHeader, BwmHeader,
-    // views
-    CountArrayView, SuffixArrayView, BwmView,
+    Position, Block,
+    components::{
+        Header, View,
+        // headers
+        MagicNumber, ChrEncodingTable, CountArrayHeader, SuffixArrayHeader, BwmHeader,
+        // views
+        CountArrayView, SuffixArrayView, BwmView,
+    },
 };
 
 pub struct FmIndexBuilder<P: Position, B: Block> {

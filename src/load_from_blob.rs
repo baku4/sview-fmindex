@@ -1,11 +1,14 @@
-use crate::new_algorithm::{Header, View};
-
-use super::{
-    FmIndex, Position, Block,
-    // headers
-    MagicNumber, ChrEncodingTable, CountArrayHeader, SuffixArrayHeader, BwmHeader,
-    // views
-    CountArrayView, SuffixArrayView, BwmView,
+use crate::{
+    FmIndex,
+    // traits
+    Position, Block,
+    components::{
+        Header, View,
+        // headers
+        MagicNumber, ChrEncodingTable, CountArrayHeader, SuffixArrayHeader, BwmHeader,
+        // views
+        CountArrayView, SuffixArrayView, BwmView,
+    },
 };
 
 #[derive(Debug, thiserror::Error)]
