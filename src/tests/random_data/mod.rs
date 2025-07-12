@@ -17,7 +17,7 @@ pub fn gen_rand_chr_list(chr_count: usize) -> Vec<u8> {
 // Return the length of min(chr_list.len(), min_len). At least one chr in chr_list is included in text.
 pub fn gen_rand_text(chr_list: &[u8], min_len: usize, max_len: usize) -> Vec<u8> {
     let mut rng = rand::rng();
-    let text_len = rng.random_range(min_len..max_len+1);
+    let text_len = rng.random_range(min_len..=max_len);
     let chr_count = chr_list.len();
     let mut text = chr_list.to_vec();
     while text.len() < text_len {
@@ -29,7 +29,7 @@ pub fn gen_rand_text(chr_list: &[u8], min_len: usize, max_len: usize) -> Vec<u8>
 }
 pub fn gen_rand_pattern(text: &[u8], min_len: usize, max_len: usize) -> Vec<u8> {
     let mut rng = rand::rng();
-    let pattern_len = rng.random_range(min_len..max_len+1);
+    let pattern_len = rng.random_range(min_len..=max_len);
     let last_idx = text.len() - pattern_len;
     let start = rng.random_range(0..last_idx);
     let end = start + pattern_len;

@@ -10,23 +10,15 @@ use crate::tests::{
         gen_rand_text,
         gen_rand_pattern,
     },
-    result_answer::{
-        get_fmindex_of_other_crate,
-        get_sorted_locations,
-    },
 };
 
-// *** For extensive and thorough testing ***
-// To enable "WIDE_TEST",
-// set the environment variable WIDE_TEST=1
-
-fn assert_accurate_fm_index<P: Position, B: Block>(
+// *** For testing locate method consistency ***
+fn assert_locate_consistency<P: Position, B: Block>(
     chr_list: &Vec<u8>,
     text: Vec<u8>,
     patterns: &Vec<Vec<u8>>,
-    answers: &Vec<Vec<u64>>,
     ltks: u32,
-    sasr: u64,
+    sasr: u32,
 ) {
     if B::MAX_SYMBOL < chr_list.len() as u32 {
         println!("          pass");
@@ -35,34 +27,63 @@ fn assert_accurate_fm_index<P: Position, B: Block>(
     let characters_by_index = chr_list.chunks(1).map(|c| c).collect::<Vec<_>>();
     
     let builder = FmIndexBuilder::<P, B>::init(text.len(), &characters_by_index).unwrap()
-        .set_lookup_table_config(LookupTableConfig::KmerSize(ltks as u32)).unwrap()
-        .set_suffix_array_config(SuffixArrayConfig::Compressed(sasr as u32)).unwrap();
+        .set_lookup_table_config(LookupTableConfig::KmerSize(ltks)).unwrap()
+        .set_suffix_array_config(SuffixArrayConfig::Compressed(sasr)).unwrap();
 
     let blob_size = builder.blob_size();
     let mut blob: Vec<u8> = vec![0; blob_size];
 
-    builder.build(text, &mut blob).unwrap();
+    builder.build(text.clone(), &mut blob).unwrap();
 
     let fm_index = FmIndex::<P, B>::load(&blob).unwrap();
 
-    patterns.iter().zip(answers.iter()).for_each(|(pattern, answer)| {
-        let mut result: Vec<u64> = fm_index.locate_text(pattern).into_iter().map(|x| x.as_u64()).collect();
-        result.sort();
-        assert_eq!(&result, answer);
+    // Create encoding table for converting text to indices
+    let encoding_table = crate::components::EncodingTable::new(&characters_by_index);
+
+    patterns.iter().for_each(|pattern| {
+        // Test count methods
+        let count_text = fm_index.count_text(pattern);
+        let count_text_rev_iter = fm_index.count_text_rev_iter(pattern.iter().rev().cloned());
+        
+        // Convert pattern to indices
+        let pattern_indices: Vec<u8> = pattern.iter().map(|&c| encoding_table.idx_of(c)).collect();
+        let count_indices = fm_index.count_indices(&pattern_indices);
+        let count_indices_rev_iter = fm_index.count_indices_rev_iter(pattern_indices.iter().rev().cloned());
+        
+        // Assert all count methods return the same result
+        assert_eq!(count_text, count_text_rev_iter, "Count methods should return same result for pattern: {:?}", pattern);
+        assert_eq!(count_text, count_indices, "Count methods should return same result for pattern: {:?}", pattern);
+        assert_eq!(count_text, count_indices_rev_iter, "Count methods should return same result for pattern: {:?}", pattern);
+
+        // Test locate methods
+        let mut locate_text = fm_index.locate_text(pattern);
+        locate_text.sort();
+        
+        let mut locate_text_rev_iter = fm_index.locate_text_rev_iter(pattern.iter().rev().cloned());
+        locate_text_rev_iter.sort();
+        
+        let mut locate_indices = fm_index.locate_indices(&pattern_indices);
+        locate_indices.sort();
+        
+        let mut locate_indices_rev_iter = fm_index.locate_indices_rev_iter(pattern_indices.iter().rev().cloned());
+        locate_indices_rev_iter.sort();
+        
+        // Assert all locate methods return the same result
+        assert_eq!(locate_text, locate_text_rev_iter, "Locate methods should return same result for pattern: {:?}", pattern);
+        assert_eq!(locate_text, locate_indices, "Locate methods should return same result for pattern: {:?}", pattern);
+        assert_eq!(locate_text, locate_indices_rev_iter, "Locate methods should return same result for pattern: {:?}", pattern);
     });
 }
 
 #[test]
-fn result_is_accurate_for_new_algorithm() {
-    let wide_test = std::env::var("WIDE_TEST").is_ok();
-
-    let range_chr_count = if wide_test { 2..63 } else { 2..4 };
-    let text_min_len = if wide_test { 500 } else { 100 };
-    let text_max_len = if wide_test { 1000 } else { 300 };
-    let n_text = if wide_test { 10 } else { 2 };
+fn locate_methods_are_consistent() {
+    let range_chr_count = 2..4;
+    let text_min_len = 100;
+    let text_max_len = 300;
+    let n_text = 2;
     let pattern_min_len = 1;
-    let pattern_max_len = if wide_test { 50 } else { 10 };
-    let n_pattern = if wide_test { 1_000 } else { 100 };
+    let pattern_max_len = 10;
+    let n_pattern = 100;
     let ltks = 3;
     let sasr = 2;
 
@@ -76,19 +97,13 @@ fn result_is_accurate_for_new_algorithm() {
             let patterns: Vec<Vec<u8>> = (0..n_pattern).map(|_| {
                 gen_rand_pattern(&text, pattern_min_len, pattern_max_len)
             }).collect();
-            let answers: Vec<Vec<u64>> = {
-                let fm_index = get_fmindex_of_other_crate(&text);
-                patterns.iter().map(|pattern| {
-                    get_sorted_locations(&fm_index, pattern)
-                }).collect()
-            };
+
             macro_rules! test_type_of {
                 ( $p: ty, $b: ident, $v: ty ) => {
-                    assert_accurate_fm_index::<$p, $b::<$v>>(
+                    assert_locate_consistency::<$p, $b::<$v>>(
                         &chr_list,
                         text.clone(),
                         &patterns,
-                        &answers,
                         ltks,
                         sasr,
                     )

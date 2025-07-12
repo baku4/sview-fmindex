@@ -109,7 +109,7 @@ pub fn bench_memory_vs_disk_mmap_locate<P: Position, B: Block + 'static>(c: &mut
             |b, _| {
                 b.iter(|| {
                     for pattern in patterns {
-                        black_box(fm_index_memory.locate_pattern(pattern));
+                        black_box(fm_index_memory.locate_text(pattern));
                     }
                 });
             }
@@ -122,7 +122,7 @@ pub fn bench_memory_vs_disk_mmap_locate<P: Position, B: Block + 'static>(c: &mut
             |b, _| {
                 b.iter(|| {
                     for pattern in patterns {
-                        black_box(fm_index_mmap.locate_pattern(pattern));
+                        black_box(fm_index_mmap.locate_text(pattern));
                     }
                 });
             }
