@@ -61,7 +61,7 @@ fn get_pidx_from_bwt(bwt: &[u8]) -> usize {
     0
 }
 
-use lt_fm_index::tests::random_text::{
+use sview_fmindex::tests::random_text::{
     gen_rand_text,
     NO_STEMS,
 };

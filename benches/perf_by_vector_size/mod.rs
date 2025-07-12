@@ -2,8 +2,8 @@ use criterion::{
     black_box, Criterion, BenchmarkId,
     PlotConfiguration, AxisScale,
 };
-use lt_fm_index::*;
-use lt_fm_index::tests::random_text::{
+use sview_fmindex::*;
+use sview_fmindex::tests::random_text::{
     NO_STEMS, gen_rand_text,
     rand_pattern_of_length,
 };

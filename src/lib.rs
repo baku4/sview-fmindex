@@ -16,8 +16,8 @@
         - The shorter the vector, the faster the algorithm, but the larger the struct.
 ### Example
 ```rust
-use lt_fm_index::LtFmIndex;
-use lt_fm_index::blocks::Block2; // `Block2` can index 3 types of characters.
+use sview_fmindex::LtFmIndex;
+use sview_fmindex::blocks::Block2; // `Block2` can index 3 types of characters.
 
 // (1) Define characters to use
 let characters_by_index: &[&[u8]] = &[

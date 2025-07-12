@@ -3,9 +3,9 @@ use criterion::{
     PlotConfiguration, AxisScale,
 };
 
-use lt_fm_index::*;
-use lt_fm_index::use_case::*;
-use lt_fm_index::tests::random_text::*;
+use sview_fmindex::*;
+use sview_fmindex::use_case::*;
+use sview_fmindex::tests::random_text::*;
 
 fn serialize_test_1(lt_fm_index: LtFmIndexAll) {
     let bytes = bincode::serialize(&lt_fm_index).unwrap();

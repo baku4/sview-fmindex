@@ -1,14 +1,8 @@
 [package]
-name = "lt-fm-index"
-version = "0.7.0"
+name = "sview-fmindex"
+version = "0.1.0"
 authors = ["baku4 <bahkhun@gmail.com>"]
 edition = "2024"
-rust-version = "1.85.1"
-description = "FM-index using k-mer lookup table for exact pattern matching"
-readme = "README.md"
-repository = "https://github.com/baku4/lt-fm-index/"
-keywords = ["fm-index", "bwt", "pattern_matching", "bio"]
-categories = ["science", "algorithms"]
 
 [dependencies]
 capwriter = { version = "0.4.2", default-features = false }

@@ -2,7 +2,7 @@ use criterion::{
     black_box, Criterion, BenchmarkId,
     PlotConfiguration, AxisScale,
 };
-use lt_fm_index::{
+use sview_fmindex::{
     LtFmIndex, blocks::{
         Block2, Block3, Block4,
     }, Position, Block,
