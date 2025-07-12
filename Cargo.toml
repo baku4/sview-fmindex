@@ -11,7 +11,6 @@ num-traits = "0.2"
 # manage blob
 capwriter = { version = "0.4.2", default-features = false }
 zerocopy = { version = "0.8", features = ["derive"] }
-byteorder = "1.5"
 memmap2 = "0.9"
 
 # burrow-wheeler transform
@@ -23,14 +22,10 @@ num-integer = "0.1"
 bv = "0.11.0"
 fxhash = "0.2"
 
-# async io
-tokio = { version = "1", default-features = false, features=["io-util"], optional = true }
-
 [dev-dependencies]
 crate_fm_index = { package = "fm-index", version = "0.1" }
 rand = "0.9"
 criterion = "0.3.5"
-tokio = { version = "1", default-features = false, features = ["io-util", "rt", "macros", "rt-multi-thread"] }
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
 getrandom = { version = "0.2.15", features = ["js"] }
@@ -40,12 +35,8 @@ name = "benchmark"
 harness = false
 
 [features]
-default = ["async-io"] # FIXME: activated temporary for debugging
+default = []
 fastbwt = ["libdivsufsort-rs"]
-async-io = [
-    "dep:tokio",
-    "capwriter/async-tokio"
-]
 
 [package.metadata.docs.rs]
 all-features = true

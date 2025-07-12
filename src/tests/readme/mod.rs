@@ -2,49 +2,45 @@
 #[allow(unused_variables)]
 fn example() {
 
-use crate::LtFmIndex;
-use crate::blocks::Block2; // Block2 can index 3 types of characters.
+use crate::{FmIndexBuilder, FmIndex};
+use crate::blocks::Block2; // Block2 can index 3 types of symbols
 
 // (1) Define characters to use
-let characters_by_index: &[&[u8]] = &[
+let symbols: &[&[u8]] = &[
     &[b'A', b'a'], // 'A' and 'a' are treated as the same
     &[b'C', b'c'], // 'C' and 'c' are treated as the same
     &[b'G', b'g'], // 'G' and 'g' are treated as the same
 ];
 // Alternatively, you can use this simpler syntax:
-let characters_by_index: &[&[u8]] = &[
+let symbols: &[&[u8]] = &[
     b"Aa", b"Cc", b"Gg"
 ];
 
 // (2) Build index
 let text = b"CTCCGTACACCTGTTTCGTATCGGAXXYYZZ".to_vec();
-let lt_fm_index= LtFmIndex::<u32, Block2<u128>>::build(
-    text,
-    characters_by_index,
-    2,
-    4,
-).unwrap();
+let builder = FmIndexBuilder::<u32, Block2<u64>>::init(text.len(), symbols).unwrap();
+// You have to prepare a blob to build the index.
+let blob_size = builder.blob_size();
+let mut blob = vec![0; blob_size];
+// Build the fm-index to the blob.
+builder.build(text, &mut blob).unwrap();
+// Load the fm-index from the blob.
+let fm_index = FmIndex::<u32, Block2<u64>>::load(&blob[..]).unwrap();
 
 // (3) Match with pattern
 let pattern = b"TA";
 //   - count
-let count = lt_fm_index.count(pattern);
+let count = fm_index.count_pattern(pattern);
 assert_eq!(count, 2);
 //   - locate
-let mut locations = lt_fm_index.locate(pattern);
+let mut locations = fm_index.locate_pattern(pattern);
 locations.sort();  // The locations may not be in order.
 assert_eq!(locations, vec![5,18]);
 // All unindexed characters are treated as the same character.
 // In the text, X, Y, and Z can match any other unindexed character
-let mut locations = lt_fm_index.locate(b"UNDEF");
+let mut locations = fm_index.locate_pattern(b"UNDEF");
 locations.sort();
 // Using the b"XXXXX", b"YYYYY", or b"!@#$%" gives the same result.
 assert_eq!(locations, vec![25,26]);
-
-// (4) Save and load
-let mut buffer = Vec::new();
-lt_fm_index.save_to(&mut buffer).unwrap();
-let loaded = LtFmIndex::load_from(&buffer[..]).unwrap();
-assert_eq!(lt_fm_index, loaded);
 
 }

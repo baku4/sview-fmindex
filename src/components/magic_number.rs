@@ -39,10 +39,11 @@ impl MagicNumber {
         self.0[0] == MAGIC_NUMBER_HEADER_1
         && self.0[1] == MAGIC_NUMBER_HEADER_2
     }
-    /// Check if supported - major & minor version are same
-    pub fn is_supported_version(&self, major_version: u8, minor_version: u8) -> bool {
-        self.major_version() == major_version
-        && self.minor_version() == minor_version
+    /// Check if supported
+    /// ! Currently, only the same version is supported
+    pub fn is_supported_version(&self) -> bool {
+        self.major_version() == MAGIC_NUMBER_VERSION_1
+        && self.minor_version() == MAGIC_NUMBER_VERSION_2
     }
 }
 

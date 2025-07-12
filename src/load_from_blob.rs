@@ -13,12 +13,13 @@ use crate::{
 
 #[derive(Debug, thiserror::Error)]
 pub enum LoadError {
-    /// Error while loading Fm-index headers.
-    #[error("Error while loading Fm-index headers. Not a valid FM-index blob.")]
-    InvalidHeaders,
-    /// Blob size is not accurate.
-    #[error("Invalid blob size. Expected: {0}, Actual: {1}")]
-    InvalidBlobSize(usize, usize),
+    /// The provided data does not appear to be a valid FM-index blob, often due to a magic number mismatch or corruption.
+    #[error("Invalid FM-index format. The data does not appear to be a valid FM-index blob.")]
+    InvalidFormat,
+
+    /// The size of the provided blob does not match the expected size calculated from its headers.
+    #[error("Mismatched blob size: headers indicate a total size of {0} bytes, but the provided blob is {1} bytes.")]
+    MismatchedBlobSize(usize, usize),
 }
 
 
@@ -27,6 +28,9 @@ impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
     pub fn load(blob: &'a [u8]) -> Result<Self, LoadError> {
         // Load headers
         let (magic_number, remaining_bytes) = MagicNumber::read_from_blob::<B>(blob);
+        if !(magic_number.is_valid() && magic_number.is_supported_version()) {
+            return Err(LoadError::InvalidFormat);
+        }
         let (encoding_table, remaining_bytes) = EncodingTable::read_from_blob::<B>(remaining_bytes);
         let (count_array_header, remaining_bytes) = CountArrayHeader::read_from_blob::<B>(remaining_bytes);
         let (suffix_array_header, remaining_bytes) = SuffixArrayHeader::read_from_blob::<B>(remaining_bytes);
@@ -47,7 +51,7 @@ impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
                 + suffix_array_header.aligned_size::<B>()
                 + bwm_header.aligned_size::<B>()
             };
-            return Err(LoadError::InvalidBlobSize(
+            return Err(LoadError::MismatchedBlobSize(
                 header_size + expected_body_size,
                 header_size + actual_body_size,
             ));
