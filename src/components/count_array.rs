@@ -1,7 +1,7 @@
 use zerocopy::IntoBytes;
 
 use crate::core::Position;
-use super::{ChrEncodingTable, Aligned, Header, View};
+use super::{EncodingTable, Aligned, Header, View};
 
 #[repr(C)]
 #[derive(zerocopy::FromBytes, zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::KnownLayout)]
@@ -9,7 +9,7 @@ use super::{ChrEncodingTable, Aligned, Header, View};
 /// A data structure for storing and querying character counts in the FM-index
 pub struct CountArrayHeader {
     // Given
-    pub chr_count: u32,
+    pub symbol_count: u32,
     pub lookup_table_kmer_size: u32,
     // Derivatives
     pub count_array_len: u32,
@@ -56,18 +56,19 @@ impl Header for CountArrayHeader {}
 // ================================================
 impl CountArrayHeader {
     pub fn new(
-        chr_count: u32,
+        symbol_count: u32,
         lookup_table_kmer_size: u32,
     ) -> Self {
-        // chr_count + 1 (wildcard) + 1 (sentinel) => total number of symbols including wildcard and sentinel
-        let total_symbol_count = chr_count + 2; // +1 for wildcard, +1 for sentinel  
+        // Total number of symbols in burrow-wheeler transformed text:
+        // symbol_count + 1 (wildcard) + 1 (sentinel)
+        let total_symbol_count_in_bwt = symbol_count + 2;
 
-        let count_array_len = total_symbol_count;
+        let count_array_len = total_symbol_count_in_bwt;
         let kmer_multiplier_len = lookup_table_kmer_size;
-        let kmer_count_table_len = (total_symbol_count).pow(lookup_table_kmer_size) as u64;
+        let kmer_count_table_len = (total_symbol_count_in_bwt).pow(lookup_table_kmer_size) as u64;
         
         Self {
-            chr_count,
+            symbol_count,
             lookup_table_kmer_size,
             count_array_len,
             kmer_multiplier_len,
@@ -78,22 +79,22 @@ impl CountArrayHeader {
     pub fn count_and_encode_text<P: Position, A: Aligned>(
         &self,
         text: &mut Vec<u8>,
-        chr_encoding_table: &ChrEncodingTable,
+        encoding_table: &EncodingTable,
         blob: &mut [u8],
     ) {
         // 1) Init
-        let total_symbol_count = self.count_array_len as usize;
+        let total_symbol_count_in_bwt = self.count_array_len as usize;
         //  - count array
         let mut count_array = vec![P::ZERO; self.count_array_len as usize];
-        //  - kmer multiplier (+ 빠른 위치 검색을 위한 chr 인덱스 계산)
+        //  - kmer multiplier (+ 빠른 위치 검색을 위한 sym 인덱스 계산)
         let kmer_multiplier: Vec<usize> = {
             (0..self.lookup_table_kmer_size).map(|pos| {
-                (total_symbol_count).pow(pos)
+                (total_symbol_count_in_bwt).pow(pos)
             }).rev().collect()
         };
-        let index_for_each_chr: Vec<usize> = {
-            (0..(self.chr_count + 1) as usize).map(|chridx| { // Including wild card (chr_count + 1)
-                kmer_multiplier[0] * (chridx + 1)
+        let index_for_each_symbol: Vec<usize> = {
+            (0..(self.symbol_count + 1) as usize).map(|symidx| { // Including wild card (symbol_count + 1)
+                kmer_multiplier[0] * (symidx + 1)
             }).collect()
         };
         // - kmer count array
@@ -109,15 +110,15 @@ impl CountArrayHeader {
         
         // 2) Counting
         let mut table_index: usize = 0;
-        text.iter_mut().rev().for_each(|chr| {
-            let chridx = chr_encoding_table.idx_of(*chr);
-            // Transform chr to chridx + 1 (sentinel will be 0 for sorting)
-            *chr = chridx + 1;
+        text.iter_mut().rev().for_each(|sym| {
+            let symidx = encoding_table.idx_of(*sym);
+            // Transform sym to symidx + 1 (sentinel will be 0 for sorting)
+            *sym = symidx + 1;
             // Add count to counts
-            count_array[chridx as usize + 1] += P::ONE;
+            count_array[symidx as usize + 1] += P::ONE;
             // Update table_index for kmer_count_array
-            table_index /= total_symbol_count;
-            table_index += index_for_each_chr[chridx as usize];
+            table_index /= total_symbol_count_in_bwt;
+            table_index += index_for_each_symbol[symidx as usize];
             // Add count to lookup table
             kmer_count_array[table_index] += P::ONE;
         });
@@ -195,17 +196,17 @@ impl<'a, P: Position> View<'a> for CountArrayView<'a, P> {
 // Locate
 // ================================================
 impl<'a, P: Position> CountArrayView<'a, P> {
-    pub fn get_precount(&self, chridx: usize) -> P {
-        self.count_array[chridx]
+    pub fn get_precount(&self, symidx: usize) -> P {
+        self.count_array[symidx]
     }
     pub fn get_initial_pos_range_and_idx_of_pattern(
         &self,
         pattern: &[u8],
-        chr_encoding_table: &ChrEncodingTable,
+        encoding_table: &EncodingTable,
     ) -> ((P, P), usize) {
         let pattern_len = pattern.len();
         if pattern_len < self.lookup_table_kmer_size {
-            let start_idx = self.get_idx_of_kmer_count_table(pattern, chr_encoding_table);
+            let start_idx = self.get_idx_of_kmer_count_table(pattern, encoding_table);
             let gap_btw_unsearched_kmer = self.kmer_multiplier[pattern_len - 1] - 1;
             let end_idx = start_idx + gap_btw_unsearched_kmer;
 
@@ -213,7 +214,7 @@ impl<'a, P: Position> CountArrayView<'a, P> {
             (pos_range, 0)
         } else {
             let sliced_pattern = &pattern[pattern.len() - self.lookup_table_kmer_size ..];
-            let start_idx = self.get_idx_of_kmer_count_table(sliced_pattern, chr_encoding_table);
+            let start_idx = self.get_idx_of_kmer_count_table(sliced_pattern, encoding_table);
 
             let pos_range = (self.kmer_count_table[start_idx -1], self.kmer_count_table[start_idx]);
             (pos_range, pattern_len - self.lookup_table_kmer_size)
@@ -222,11 +223,11 @@ impl<'a, P: Position> CountArrayView<'a, P> {
     fn get_idx_of_kmer_count_table(
         &self,
         sliced_pattern: &[u8],
-        chr_encoding_table: &ChrEncodingTable,
+        encoding_table: &EncodingTable,
     ) -> usize {
         sliced_pattern.iter().zip(self.kmer_multiplier.iter())
-            .map(|(&chr, &mul_of_pos)| {
-                (chr_encoding_table.idx_of(chr) + 1) as usize * mul_of_pos
+            .map(|(&sym, &mul_of_pos)| {
+                (encoding_table.idx_of(sym) + 1) as usize * mul_of_pos
             }).sum()
     }
 }

@@ -39,7 +39,7 @@ mod suffix_array;
 mod bwm;
 
 pub use magic_number::MagicNumber;
-pub use encoding_table::ChrEncodingTable;
+pub use encoding_table::EncodingTable;
 pub use count_array::{CountArrayHeader, CountArrayView};
 pub use suffix_array::{SuffixArrayHeader, SuffixArrayView};
 pub use bwm::{BwmHeader, BwmView, Block, blocks};

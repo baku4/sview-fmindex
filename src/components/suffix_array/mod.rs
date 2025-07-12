@@ -54,7 +54,7 @@ impl SuffixArrayHeader {
 
         Self { sampling_ratio, suffix_array_len, _padding: 0 }
     }
-    pub fn write_to_blob_and_get_sentinel_chr_index<P: Position>(
+    pub fn write_to_blob_and_get_sentinel_index<P: Position>(
         &self,
         text: &mut Vec<u8>,
         blob: &mut [u8],

@@ -28,7 +28,7 @@ fn assert_accurate_fm_index<P: Position, B: Block>(
     ltks: u32,
     sasr: u64,
 ) {
-    if B::MAX_CHR < chr_list.len() as u32 {
+    if B::MAX_SYMBOL < chr_list.len() as u32 {
         println!("          pass");
         return;
     }

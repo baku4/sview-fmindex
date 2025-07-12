@@ -12,7 +12,7 @@ impl<V: Vector> Aligned for Block3<V> {
 
 impl<V: Vector> Block for Block3<V> {
     const BLOCK_LEN: u32 = V::BLOCK_LEN;
-    const MAX_CHR: u32 = 7;
+    const MAX_SYMBOL: u32 = 7;
 
     #[inline]
     fn vectorize<P: Position>(text_chunk: &[u8], rank_pre_counts: &mut Vec<P>) -> Self {
@@ -54,7 +54,7 @@ impl<V: Vector> Block for Block3<V> {
         count_bits.count_ones()
     }
     #[inline]
-    fn get_chridx_of(&self, rem: u32) -> u8 {
+    fn get_symidx_of(&self, rem: u32) -> u8 {
         let mov = V::BLOCK_LEN - rem - 1;
         let v1 = (self.0[0] >> V::from_u32(mov)).as_u8() & 1;
         let v2 = (self.0[1] >> V::from_u32(mov)).as_u8() & 1;

@@ -21,16 +21,16 @@ impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
         // LF mapping
         while pos_range.0 < pos_range.1 && idx > 0 {
             idx -= 1;
-            let next_chr = pattern[idx];
-            pos_range = self.next_pos_range(pos_range, next_chr);
+            let next_sym = pattern[idx];
+            pos_range = self.next_pos_range(pos_range, next_sym);
         }
         pos_range
     }
-    fn next_pos_range(&self, pos_range: (P, P), chr: u8) -> (P, P) {
-        let chridx = self.encoding_table.idx_of(chr);
-        let precount = self.count_array_view.get_precount(chridx as usize);
-        let start_rank = self.bwm_view.get_next_rank(pos_range.0, chridx);
-        let end_rank = self.bwm_view.get_next_rank(pos_range.1, chridx);
+    fn next_pos_range(&self, pos_range: (P, P), sym: u8) -> (P, P) {
+        let symidx = self.encoding_table.idx_of(sym);
+        let precount = self.count_array_view.get_precount(symidx as usize);
+        let start_rank = self.bwm_view.get_next_rank(pos_range.0, symidx);
+        let end_rank = self.bwm_view.get_next_rank(pos_range.1, symidx);
         (precount + start_rank, precount + end_rank)
     }
 
@@ -41,9 +41,9 @@ impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
         'each_pos: for mut pos in P::as_vec_in_range(&pos_range.0, &pos_range.1) {
             let mut offset: P = P::ZERO;
             while pos % self.suffix_array_view.sampling_ratio() != P::ZERO { 
-                match self.bwm_view.get_pre_rank_and_chridx(pos) {
-                    Some((rank, chridx)) => {
-                        let precount = self.count_array_view.get_precount(chridx as usize);
+                match self.bwm_view.get_pre_rank_and_symidx(pos) {
+                    Some((rank, symidx)) => {
+                        let precount = self.count_array_view.get_precount(symidx as usize);
                         pos = precount + rank;
                     },
                     None => { // if position == pidx

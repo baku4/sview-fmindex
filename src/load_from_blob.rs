@@ -5,7 +5,7 @@ use crate::{
     components::{
         Header, View,
         // headers
-        MagicNumber, ChrEncodingTable, CountArrayHeader, SuffixArrayHeader, BwmHeader,
+        MagicNumber, EncodingTable, CountArrayHeader, SuffixArrayHeader, BwmHeader,
         // views
         CountArrayView, SuffixArrayView, BwmView,
     },
@@ -27,7 +27,7 @@ impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
     pub fn load(blob: &'a [u8]) -> Result<Self, LoadError> {
         // Load headers
         let (magic_number, remaining_bytes) = MagicNumber::read_from_blob::<B>(blob);
-        let (chr_encoding_table, remaining_bytes) = ChrEncodingTable::read_from_blob::<B>(remaining_bytes);
+        let (encoding_table, remaining_bytes) = EncodingTable::read_from_blob::<B>(remaining_bytes);
         let (count_array_header, remaining_bytes) = CountArrayHeader::read_from_blob::<B>(remaining_bytes);
         let (suffix_array_header, remaining_bytes) = SuffixArrayHeader::read_from_blob::<B>(remaining_bytes);
         let (bwm_header, body_blob) = BwmHeader::read_from_blob::<B>(remaining_bytes);
@@ -42,7 +42,7 @@ impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
         if actual_body_size != expected_body_size {
             let header_size = {
                 magic_number.aligned_size::<B>()
-                + chr_encoding_table.aligned_size::<B>()
+                + encoding_table.aligned_size::<B>()
                 + count_array_header.aligned_size::<B>()
                 + suffix_array_header.aligned_size::<B>()
                 + bwm_header.aligned_size::<B>()
@@ -69,7 +69,7 @@ impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
 
         Ok(Self {
             magic_number,
-            encoding_table: chr_encoding_table,
+            encoding_table,
             count_array_header,
             suffix_array_header,
             bwm_header,

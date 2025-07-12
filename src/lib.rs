@@ -12,7 +12,7 @@ pub use builder::{FmIndexBuilder, BuildError, build_config}; // Export to crate 
 pub struct FmIndex<'a, P: Position, B: Block> {
     // headers
     magic_number: components::MagicNumber,
-    encoding_table: components::ChrEncodingTable,
+    encoding_table: components::EncodingTable,
     count_array_header: components::CountArrayHeader,
     suffix_array_header: components::SuffixArrayHeader,
     bwm_header: components::BwmHeader,

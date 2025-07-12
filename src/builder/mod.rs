@@ -6,7 +6,7 @@ use crate::{
     components::{
         Header, View,
         // headers
-        MagicNumber, ChrEncodingTable, CountArrayHeader, SuffixArrayHeader, BwmHeader,
+        MagicNumber, EncodingTable, CountArrayHeader, SuffixArrayHeader, BwmHeader,
         // views
         CountArrayView, SuffixArrayView, BwmView,
     },
@@ -17,9 +17,9 @@ pub mod build_config;
 pub struct FmIndexBuilder<P: Position, B: Block> {
     // Unchangeable after init
     text_len: usize,
-    chr_count: u32,
+    symbol_count: u32,
     magic_number: MagicNumber,
-    chr_encoding_table: ChrEncodingTable,
+    encoding_table: EncodingTable,
     // Configs
     suffix_array_config: build_config::SuffixArrayConfig,
     lookup_table_config: build_config::LookupTableConfig,
@@ -33,9 +33,9 @@ pub struct FmIndexBuilder<P: Position, B: Block> {
 
 #[derive(Debug, thiserror::Error)]
 pub enum BuildError {
-    /// The number of distinct characters exceeds the capacity of the chosen block type.
-    #[error("The character count ({1}) exceeds the maximum for the chosen block type ({0}). Try using a larger block type or reducing the number of characters.")]
-    ChrCountOver(u32, u32),
+    /// The number of distinct symbols exceeds the capacity of the chosen block type.
+    #[error("The symbol count ({1}) exceeds the maximum for the chosen block type ({0}). Try using a larger block type or reducing the number of symbols.")]
+    SymbolCountOver(u32, u32),
 
     /// The length of the provided text does not match the length declared during builder initialization.
     #[error("Mismatched text length: expected {0} bytes, but got {1} bytes.")]
@@ -60,23 +60,21 @@ impl<P: Position, B: Block> FmIndexBuilder<P, B> {
     // ================================================
     pub fn init<T: AsRef<[u8]>>(
         text_len: usize,
-        characters_by_index: &[T],
+        symbols: &[T],
     ) -> Result<Self, BuildError> {
         let suffix_array_config = build_config::SuffixArrayConfig::default();
         let lookup_table_config = build_config::LookupTableConfig::default();
 
-        let chr_count = characters_by_index.len() as u32;
-        let chr_encoding_table = ChrEncodingTable::new(
-            characters_by_index,
-        );
-        if chr_count > B::MAX_CHR {
-            return Err(BuildError::ChrCountOver(B::MAX_CHR, chr_count));
+        let symbol_count = symbols.len() as u32;
+        let encoding_table = EncodingTable::new(symbols);
+        if symbol_count > B::MAX_SYMBOL {
+            return Err(BuildError::SymbolCountOver(B::MAX_SYMBOL, symbol_count));
         }
 
         // Generate headers
         let (count_array_header, suffix_array_header, bwm_header) = Self::generate_headers(
             text_len,
-            chr_count,
+            symbol_count,
             &suffix_array_config,
             &lookup_table_config,
         )?;
@@ -84,9 +82,9 @@ impl<P: Position, B: Block> FmIndexBuilder<P, B> {
         Ok(Self {
             // Unchangeable after init
             text_len,
-            chr_count,
+            symbol_count,
             magic_number: MagicNumber::new(),
-            chr_encoding_table,
+            encoding_table,
             // Configs
             lookup_table_config,
             suffix_array_config,
@@ -100,15 +98,15 @@ impl<P: Position, B: Block> FmIndexBuilder<P, B> {
     }
     fn generate_headers(
         text_len: usize,
-        chr_count: u32,
+        symbol_count: u32,
         suffix_array_config: &build_config::SuffixArrayConfig,
         lookup_table_config: &build_config::LookupTableConfig,
     ) -> Result<(CountArrayHeader, SuffixArrayHeader, BwmHeader), BuildError> {
-        let lookup_table_kmer_size = lookup_table_config.kmer_size::<P>(chr_count)?;
+        let lookup_table_kmer_size = lookup_table_config.kmer_size::<P>(symbol_count)?;
         let suffix_array_sampling_ratio = suffix_array_config.sampling_ratio()?;
 
         let count_array_header = CountArrayHeader::new(
-            chr_count,
+            symbol_count,
             lookup_table_kmer_size,
         );
         let suffix_array_header = SuffixArrayHeader::new(
@@ -117,7 +115,7 @@ impl<P: Position, B: Block> FmIndexBuilder<P, B> {
         );
         let bwm_header = BwmHeader::new::<P, B>(
             text_len as u64,
-            chr_count + 1,
+            symbol_count + 1,
         );
 
         Ok((
@@ -129,7 +127,7 @@ impl<P: Position, B: Block> FmIndexBuilder<P, B> {
     pub fn set_lookup_table_config(self, config: build_config::LookupTableConfig) -> Result<Self, BuildError> {
         let (count_array_header, suffix_array_header, bwm_header) = Self::generate_headers(
             self.text_len,
-            self.chr_count,
+            self.symbol_count,
             &self.suffix_array_config,
             &config,
         )?;
@@ -145,7 +143,7 @@ impl<P: Position, B: Block> FmIndexBuilder<P, B> {
     pub fn set_suffix_array_config(self, config: build_config::SuffixArrayConfig) -> Result<Self, BuildError> {
         let (count_array_header, suffix_array_header, bwm_header) = Self::generate_headers(
             self.text_len,
-            self.chr_count,
+            self.symbol_count,
             &config,
             &self.lookup_table_config,
         )?;
@@ -169,7 +167,7 @@ impl<P: Position, B: Block> FmIndexBuilder<P, B> {
     // Header size in bytes
     fn header_size(&self) -> usize {
         self.magic_number.aligned_size::<B>()
-        + self.chr_encoding_table.aligned_size::<B>()
+        + self.encoding_table.aligned_size::<B>()
         + self.count_array_header.aligned_size::<B>()
         + self.suffix_array_header.aligned_size::<B>()
         + self.bwm_header.aligned_size::<B>()
@@ -214,10 +212,10 @@ impl<P: Position, B: Block> FmIndexBuilder<P, B> {
         // Magic number
         let mut header_end_index = self.magic_number.aligned_size::<B>();
         self.magic_number.write_to_blob(&mut blob[header_start_index..header_end_index]);
-        // Chr encoding table
+        // Encoding table
         header_start_index = header_end_index;
-        header_end_index += self.chr_encoding_table.aligned_size::<B>();
-        self.chr_encoding_table.write_to_blob(&mut blob[header_start_index..header_end_index]);
+        header_end_index += self.encoding_table.aligned_size::<B>();
+        self.encoding_table.write_to_blob(&mut blob[header_start_index..header_end_index]);
         // Count array header
         header_start_index = header_end_index;
         header_end_index += self.count_array_header.aligned_size::<B>();
@@ -239,7 +237,7 @@ impl<P: Position, B: Block> FmIndexBuilder<P, B> {
         //  - during encoding, count the number of each character & kmer
         self.count_array_header.count_and_encode_text::<P, B>(
             &mut text,
-            &self.chr_encoding_table,
+            &self.encoding_table,
             &mut blob[body_start_index..body_end_index],
         );
         // Suffix array
@@ -248,7 +246,7 @@ impl<P: Position, B: Block> FmIndexBuilder<P, B> {
         body_start_index = body_end_index;
         body_end_index = body_start_index + SuffixArrayView::<P>::aligned_body_size::<B>(&self.suffix_array_header);
 
-        let sentinel_chr_index = self.suffix_array_header.write_to_blob_and_get_sentinel_chr_index::<P>(
+        let sentinel_index = self.suffix_array_header.write_to_blob_and_get_sentinel_index::<P>(
             &mut text,
             &mut blob[body_start_index..body_end_index],
         );
@@ -257,7 +255,7 @@ impl<P: Position, B: Block> FmIndexBuilder<P, B> {
         body_end_index = body_start_index + BwmView::<P, B>::aligned_body_size::<B>(&self.bwm_header);
         self.bwm_header.encode_bwm_body::<P, B>(
             text,
-            sentinel_chr_index, 
+            sentinel_index, 
             &mut blob[body_start_index..body_end_index],
         );
 

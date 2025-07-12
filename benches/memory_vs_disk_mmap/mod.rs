@@ -33,7 +33,7 @@ pub fn bench_memory_vs_disk_mmap_locate<P: Position, B: Block + 'static>(c: &mut
     let mut group = c.benchmark_group(format!("memory_vs_disk_mmap_locate_{}_{}", p_name, b_name));
     
     // 테스트 데이터 준비 - Block 타입에 맞게 문자 수 조정
-    let max_chr_count = B::MAX_CHR as usize;
+    let max_chr_count = B::MAX_SYMBOL as usize;
     let chr_list = gen_rand_chr_list(max_chr_count);
     
     // text 길이 설정 (BIG_TEXT 환경변수에 따라)
