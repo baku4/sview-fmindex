@@ -8,6 +8,9 @@ pub use components::{Block, blocks};
 mod builder;
 pub use builder::{FmIndexBuilder, BuildError, build_config};
 
+/// FM-index
+///
+/// FM-index is a data structure to locate all occurrences of a pattern in a text.
 #[derive(Clone, PartialEq, Eq)]
 pub struct FmIndex<'a, P: Position, B: Block> {
     // headers

@@ -2,6 +2,7 @@ use num_integer::div_rem;
 
 /**
 Type for the position in index.
+
 Two types are supported:
   - `u32`
   - `u64`

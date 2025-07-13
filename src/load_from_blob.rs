@@ -11,6 +11,7 @@ use crate::{
     },
 };
 
+/// Error type for loading fm-index from blob
 #[derive(Debug, thiserror::Error)]
 pub enum LoadError {
     /// The provided data does not appear to be a valid FM-index blob, often due to a magic number mismatch or corruption.

@@ -1,3 +1,7 @@
+/*!
+Configurations for the builder
+*/
+
 use super::BuildError;
 
 mod suffix_array_config;

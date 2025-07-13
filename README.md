@@ -1,26 +1,50 @@
 # sview-fmindex
 
+***Data is in single blob, and fm-index is slice view.***
+
+`sview-fmindex` is a Rust library for building FM-indexes into pre-allocated blobs and using them with minimal copying through slice views.
+
+- `-fmindex`: FM-index is a compressed text index that provides two main operations:
+  1) **Count** the number of occurrences in text
+  2) **Locate** the positions in text
+- `sview-`: In this library, data is stored in one contiguous blob, and the FM-index structure is created as a slice view into this blob.
+
+## Architecture
+
+```
+           builder
+          ┌────────┐
+          │ header │
+          └────────┘
+               │
+               |-(build with text)
+ blob          ▼
+┌────────┬──────────────────────┐
+│ header │     body (LARGE)     │
+└────────┴──────────────────────┘
+               │
+               │-(load index)
+      fm-index ▼
+      ┌────────┬────────┐
+      │ header │  view  │
+      └────────┴────────┘
+```
+
 ## Usage
 
-### Example
+### Basic Example
 
 ```rust
 use sview_fmindex::{FmIndexBuilder, FmIndex};
 use sview_fmindex::blocks::Block2; // Block2 can index 3 types of symbols
 
-// (1) Define characters to use
-let symbols: &[&[u8]] = &[
-    &[b'A', b'a'], // 'A' and 'a' are treated as the same
-    &[b'C', b'c'], // 'C' and 'c' are treated as the same
-    &[b'G', b'g'], // 'G' and 'g' are treated as the same
-];
-// Alternatively, you can use this simpler syntax:
+// (1) Prepare Data
+let text = b"CTCCGTACACCTGTTTCGTATCGGAXXYYZZ".to_vec();
 let symbols: &[&[u8]] = &[
     b"Aa", b"Cc", b"Gg"
 ];
 
 // (2) Build index
-let text = b"CTCCGTACACCTGTTTCGTATCGGAXXYYZZ".to_vec();
 let builder = FmIndexBuilder::<u32, Block2<u64>>::init(text.len(), symbols).unwrap();
 // You have to prepare a blob to build the index.
 let blob_size = builder.blob_size();

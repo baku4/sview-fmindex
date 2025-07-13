@@ -1,7 +1,7 @@
 use crate::Position;
 use super::BuildError;
 
-/// Config for k-mer lookup table
+/// Configuration for the lookup table
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LookupTableConfig {
     // Not use lookup table

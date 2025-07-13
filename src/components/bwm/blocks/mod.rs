@@ -1,5 +1,6 @@
 /*!
 Implementation of blocks of trait [Block].
+
 The suffix of the struct name is the count of inner vectors.
 Using less vector makes the algorithms faster.
 But the maximum count of the index is restrict to the $2^{v}-1$ ($v$ the vector count.)
@@ -18,13 +19,13 @@ mod block5;
 mod block6;
 
 pub use vector::Vector;
-/// Block of 2 vectors that can index 3 characters.
+/// Block of 2 vectors that can index 3 symbols.
 pub use block2::Block2;
-/// Block of 3 vectors that can index 7 characters.
+/// Block of 3 vectors that can index 7 symbols.
 pub use block3::Block3;
-/// Block of 4 vectors that can index 15 characters.
+/// Block of 4 vectors that can index 15 symbols.
 pub use block4::Block4;
-/// Block of 5 vectors that can index 31 characters.
+/// Block of 5 vectors that can index 31 symbols.
 pub use block5::Block5;
-/// Block of 6 vectors that can index 63 characters.
+/// Block of 6 vectors that can index 63 symbols.
 pub use block6::Block6;

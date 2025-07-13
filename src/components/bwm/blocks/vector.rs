@@ -1,5 +1,6 @@
 /**
 Type for the compressed bits in Burrow-Wheeler transformed text.
+
 Three types are supported:
 - `u32`
 - `u64`

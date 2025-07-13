@@ -14,6 +14,7 @@ use crate::{
 
 pub mod build_config;
 
+/// Builder for FM-index
 pub struct FmIndexBuilder<P: Position, B: Block> {
     // Unchangeable after init
     text_len: usize,
@@ -31,6 +32,7 @@ pub struct FmIndexBuilder<P: Position, B: Block> {
     _phantom: PhantomData<(P, B)>,
 }
 
+/// Error type for the builder
 #[derive(Debug, thiserror::Error)]
 pub enum BuildError {
     /// The number of distinct symbols exceeds the capacity of the chosen block type.

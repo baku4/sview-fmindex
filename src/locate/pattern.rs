@@ -1,18 +1,22 @@
 use super::{FmIndex, Position, Block};
 
 impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
+    /// Count the number of occurrences with the pattern
     pub fn count_pattern(&self, pattern: &[u8]) -> P {
         let pos_range = self.get_pos_range_of_pattern(pattern);
         pos_range.1 - pos_range.0
     }
+    /// Locate all occurrences with the pattern
     pub fn locate_pattern(&self, pattern: &[u8]) -> Vec<P> {
         let pos_range = self.get_pos_range_of_pattern(pattern);
         self.get_locations(pos_range)
     }
-    pub fn count_pattern_rev_iter<I: Iterator<Item = u8>>(&self, text_rev_iter: I) -> P {
-        let pos_range = self.get_pos_range_from_pattern_rev_iter(text_rev_iter);
+    /// Count the number of occurrences with the reverse iterator of pattern
+    pub fn count_pattern_rev_iter<I: Iterator<Item = u8>>(&self, pattern_rev_iter: I) -> P {
+        let pos_range = self.get_pos_range_from_pattern_rev_iter(pattern_rev_iter);
         pos_range.1 - pos_range.0
     }
+    /// Locate all occurrences with the reverse iterator of pattern
     pub fn locate_pattern_rev_iter<I: Iterator<Item = u8>>(&self, pattern_rev_iter: I) -> Vec<P> {
         let pos_range = self.get_pos_range_from_pattern_rev_iter(pattern_rev_iter);
         self.get_locations(pos_range)

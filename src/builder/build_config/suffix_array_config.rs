@@ -1,5 +1,6 @@
 use super::BuildError;
 
+/// Configuration for the suffix array
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SuffixArrayConfig {
     /// Not compressed

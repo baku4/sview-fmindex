@@ -25,6 +25,9 @@ pub struct BwmView<'a, P: Position, B: Block> {
     blocks: &'a [B],
 }
 
+/// Block to compress the Burrows-Wheeler transformed text
+/// 
+/// Define the maximum symbol count that can be indexed by the block.
 pub trait Block: zerocopy::FromBytes + zerocopy::IntoBytes + zerocopy::Immutable + Aligned {
     const BLOCK_LEN: u32; // Length of block
     const MAX_SYMBOL: u32; // Maximum symbol count that can be indexed by the block
