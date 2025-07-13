@@ -1,0 +1,27 @@
+[package]
+name = "fmindex-benchmark"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "fmindex-benchmark"
+path = "src/main.rs"
+
+[dependencies]
+# 기존 lt-fm-index 사용 (기본)
+lt-fm-index = { version = "0.7.0" }
+
+# sview-fmindex 사용 (로컬 크레이트)
+sview-fmindex = { path = ".." }
+
+# 유틸리티
+clap = { version = "4.0", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+rand = { version = "0.8", features = ["std", "getrandom"] }
+chrono = { version = "0.4", features = ["serde"] }
+memmap2 = "0.9"
+
+[features]
+default = []
+fastbwt = ["sview-fmindex/fastbwt", "lt-fm-index/fastbwt"] 

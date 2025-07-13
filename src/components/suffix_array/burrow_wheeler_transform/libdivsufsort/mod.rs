@@ -1,4 +1,4 @@
-use crate::core::Position;
+use crate::Position;
 // Always use 64 bit version because the 32 bit version return the i32, smaller than u32.
 use libdivsufsort_rs::{
     divsufsort64 as divsufsort,

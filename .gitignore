@@ -2,6 +2,11 @@
 /target
 Cargo.lock
 
+# Bin
+/bin/target
+/bin/Cargo.lock
+/bin/test_data
+
 # OS X
 .DS_Store
 
