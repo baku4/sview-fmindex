@@ -4,14 +4,14 @@ use super::BuildError;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SuffixArrayConfig {
     /// Not compressed
-    NotCompressed,
+    Uncompressed,
     /// Compressed with given sampling ratio
     Compressed(u32),
 }
 
 impl Default for SuffixArrayConfig {
     fn default() -> Self {
-        Self::NotCompressed
+        Self::Uncompressed
     }
 }
 
@@ -19,7 +19,7 @@ impl SuffixArrayConfig {
     /// Get the sampling ratio
     pub fn sampling_ratio(&self) -> Result<u32, BuildError> {
         match self {
-            Self::NotCompressed => Ok(1),
+            Self::Uncompressed => Ok(1),
             Self::Compressed(ratio) => {
                 if *ratio < 2 {
                     Err(BuildError::InvalidConfig(

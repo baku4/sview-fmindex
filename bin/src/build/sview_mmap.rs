@@ -31,6 +31,17 @@ pub fn build_index(
             .collect::<Vec<_>>()
     );
 
+    let suffix_array_config = if sasr == 1 {
+        SuffixArrayConfig::Uncompressed
+    } else {
+        SuffixArrayConfig::Compressed(sasr as u32)
+    };
+    let lookup_table_config = if klts == 1 {
+        LookupTableConfig::None
+    } else {
+        LookupTableConfig::KmerSize(klts as u32)
+    };
+
     // T를 와일드카드로 취급하면 Block2, 아니면 Block3 사용
     if treat_t_as_wildcard {
         // Block2 사용 (ACG만 인덱싱)
@@ -38,8 +49,8 @@ pub fn build_index(
             text.len(),
             &symbols,
         )?
-        .set_suffix_array_config(SuffixArrayConfig::Compressed(sasr as u32))?
-        .set_lookup_table_config(LookupTableConfig::KmerSize(klts as u32))?;
+        .set_suffix_array_config(suffix_array_config)?
+        .set_lookup_table_config(lookup_table_config)?;
 
         let blob_size = builder.blob_size();
         println!("Blob size: {} bytes", blob_size);
@@ -59,8 +70,11 @@ pub fn build_index(
         // mmap으로 메모리 매핑
         let mut mmap = unsafe { MmapMut::map_mut(&file)? };
         
-        // 빌드 실행 (mmap 슬라이스에 직접 쓰기)
+        // Build time 측정
+        let build_start_time = std::time::Instant::now();
         builder.build(text.to_vec(), &mut mmap)?;
+        let build_time = build_start_time.elapsed();
+        println!("Build time: {:.2?}", build_time);
         
         // mmap을 디스크에 동기화
         mmap.flush()?;
@@ -93,8 +107,11 @@ pub fn build_index(
         // mmap으로 메모리 매핑
         let mut mmap = unsafe { MmapMut::map_mut(&file)? };
         
-        // 빌드 실행 (mmap 슬라이스에 직접 쓰기)
+        // Build time 측정
+        let build_start_time = std::time::Instant::now();
         builder.build(text.to_vec(), &mut mmap)?;
+        let build_time = build_start_time.elapsed();
+        println!("Build time: {:.2?}", build_time);
         
         // mmap을 디스크에 동기화
         mmap.flush()?;

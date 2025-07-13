@@ -31,6 +31,8 @@ pub fn locate_patterns(
     data_dir: PathBuf,
     treat_t_as_wildcard: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let total_start_time = std::time::Instant::now();
+    
     println!("Locating patterns...");
     println!("Algorithm: {:?}", algorithm);
     println!("Data directory: {}", data_dir.display());
@@ -44,6 +46,7 @@ pub fn locate_patterns(
     }
 
     // 알고리즘별로 패턴 검색 실행
+    let locate_start_time = std::time::Instant::now();
     match algorithm {
         Algorithm::SviewMemory => {
             sview_memory::locate_patterns(&data_dir, treat_t_as_wildcard)?;
@@ -55,8 +58,13 @@ pub fn locate_patterns(
             sview_mmap::locate_patterns(&data_dir, treat_t_as_wildcard)?;
         }
     }
-
+    let locate_time = locate_start_time.elapsed();
+    
+    let total_time = total_start_time.elapsed();
     println!("Pattern location completed successfully!");
+    println!("Locate time: {:.2?}", locate_time);
+    println!("Total time: {:.2?}", total_time);
+    
     Ok(())
 }
 

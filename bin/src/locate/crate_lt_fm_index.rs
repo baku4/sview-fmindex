@@ -11,10 +11,17 @@ where
     B: lt_fm_index::Block<u32>,
 {
     let blob_path = data_dir.join(format!("{}.blob", blob_stem));
+    
+    // Blob 로딩 시간 측정
+    let load_start_time = std::time::Instant::now();
     let blob = std::fs::read(&blob_path)?;
     let lt_fm_index = LtFmIndex::<u32, B>::load_from(&blob[..])?;
+    let load_time = load_start_time.elapsed();
+    
     let result_path = data_dir.join(format!("{}-results.txt", blob_stem));
 
+    // Locate 처리 시간 측정
+    let locate_start_time = std::time::Instant::now();
     let pattern_path = data_dir.join("pattern.txt");
     let reader = create_pattern_reader(&pattern_path)?;
     let mut writer = create_result_writer(&result_path)?;
@@ -27,6 +34,11 @@ where
     });
 
     writer.flush()?;
+    let locate_time = locate_start_time.elapsed();
+    
+    println!("Blob loading time: {:.2?}", load_time);
+    println!("Locate processing time: {:.2?}", locate_time);
+    
     Ok(result_path)
 }
 

@@ -29,7 +29,7 @@ enum Commands {
         pattern_length: usize,
         
         /// Number of patterns
-        #[arg(short, long, default_value_t = 100)]
+        #[arg(short = 'n', long, default_value_t = 100)]
         pattern_count: usize,
         
         /// Random seed (default: 0)

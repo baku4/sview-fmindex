@@ -10,11 +10,18 @@ fn locate_and_write_results<B: Block>(
     blob_stem: &str,
 ) -> Result<PathBuf, Box<dyn std::error::Error>> {
     let blob_path = data_dir.join(format!("{}.blob", blob_stem));
+    
+    // Blob 로딩 시간 측정
+    let load_start_time = std::time::Instant::now();
     let file = fs::File::open(&blob_path)?;
     let mmap = unsafe { Mmap::map(&file)? };
     let fm_index = FmIndex::<u32, B>::load(&mmap)?;
+    let load_time = load_start_time.elapsed();
+    
     let result_path = data_dir.join(format!("{}-results.txt", blob_stem));
 
+    // Locate 처리 시간 측정
+    let locate_start_time = std::time::Instant::now();
     let pattern_path = data_dir.join("pattern.txt");
     let reader = create_pattern_reader(&pattern_path)?;
     let mut writer = create_result_writer(&result_path)?;
@@ -26,6 +33,11 @@ fn locate_and_write_results<B: Block>(
     });
 
     writer.flush()?;
+    let locate_time = locate_start_time.elapsed();
+    
+    println!("Blob loading time: {:.2?}", load_time);
+    println!("Locate processing time: {:.2?}", locate_time);
+    
     Ok(result_path)
 }
 

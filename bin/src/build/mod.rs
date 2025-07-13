@@ -35,6 +35,8 @@ pub fn build_indices(
     klts: usize,
     treat_t_as_wildcard: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let total_start_time = std::time::Instant::now();
+    
     println!("Building FM-index...");
     println!("Algorithm: {:?}", algorithm);
     println!("Data directory: {}", data_dir.display());
@@ -65,7 +67,10 @@ pub fn build_indices(
             sview_mmap::build_index(&text, &data_dir, sasr, klts, treat_t_as_wildcard)?;
         }
     }
-
+    
+    let total_time = total_start_time.elapsed();
     println!("Index building completed successfully!");
+    println!("Total time: {:.2?}", total_time);
+    
     Ok(())
 } 

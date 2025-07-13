@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 use sview_fmindex::{
-    FmIndexBuilder, FmIndex, blocks::{Block2, Block3},
+    FmIndexBuilder, blocks::{Block2, Block3},
     build_config::{LookupTableConfig, SuffixArrayConfig}
 };
 
@@ -30,6 +30,18 @@ pub fn build_index(
             .collect::<Vec<_>>()
     );
 
+    // Config 설정
+    let suffix_array_config = if sasr == 1 {
+        SuffixArrayConfig::Uncompressed
+    } else {
+        SuffixArrayConfig::Compressed(sasr as u32)
+    };
+    let lookup_table_config = if klts == 1 {
+        LookupTableConfig::None
+    } else {
+        LookupTableConfig::KmerSize(klts as u32)
+    };
+
     // T를 와일드카드로 취급하면 Block2, 아니면 Block3 사용
     if treat_t_as_wildcard {
         // Block2 사용 (ACG만 인덱싱)
@@ -37,42 +49,52 @@ pub fn build_index(
             text.len(),
             &symbols,
         )?
-        .set_suffix_array_config(SuffixArrayConfig::Compressed(sasr as u32))?
-        .set_lookup_table_config(LookupTableConfig::KmerSize(klts as u32))?;
+        .set_suffix_array_config(suffix_array_config)?
+        .set_lookup_table_config(lookup_table_config)?;
 
         let blob_size = builder.blob_size();
         let mut blob: Vec<u8> = vec![0; blob_size];
         println!("Blob size: {} bytes", blob_size);
 
+        // Build time 측정
+        let build_start_time = std::time::Instant::now();
         builder.build(text.to_vec(), &mut blob)?;
+        let build_time = build_start_time.elapsed();
+        println!("Build time: {:.2?}", build_time);
 
+        // Save time 측정
+        let save_start_time = std::time::Instant::now();
         let output_path = data_dir.join("sview-memory-block2.blob");
         fs::write(&output_path, &blob)?;
+        let save_time = save_start_time.elapsed();
+        println!("Save time: {:.2?}", save_time);
         println!("Index saved to: {}", output_path.display());
-
-        let _loaded_index = FmIndex::<u32, Block2<u64>>::load(&blob)?;
-        println!("Index loaded successfully for verification");
     } else {
         // Block3 사용 (ACGT 모두 인덱싱)
         let builder = FmIndexBuilder::<u32, Block3<u64>>::init(
             text.len(),
             &symbols,
         )?
-        .set_suffix_array_config(SuffixArrayConfig::Compressed(sasr as u32))?
-        .set_lookup_table_config(LookupTableConfig::KmerSize(klts as u32))?;
+        .set_suffix_array_config(suffix_array_config)?
+        .set_lookup_table_config(lookup_table_config)?;
 
         let blob_size = builder.blob_size();
         let mut blob: Vec<u8> = vec![0; blob_size];
         println!("Blob size: {} bytes", blob_size);
 
+        // Build time 측정
+        let build_start_time = std::time::Instant::now();
         builder.build(text.to_vec(), &mut blob)?;
+        let build_time = build_start_time.elapsed();
+        println!("Build time: {:.2?}", build_time);
 
+        // Save time 측정
+        let save_start_time = std::time::Instant::now();
         let output_path = data_dir.join("sview-memory-block3.blob");
         fs::write(&output_path, &blob)?;
+        let save_time = save_start_time.elapsed();
+        println!("Save time: {:.2?}", save_time);
         println!("Index saved to: {}", output_path.display());
-
-        let _loaded_index = FmIndex::<u32, Block3<u64>>::load(&blob)?;
-        println!("Index loaded successfully for verification");
     }
 
     Ok(())

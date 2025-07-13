@@ -50,7 +50,7 @@ fn test_config_invariance() {
         LookupTableConfig::KmerSize(4),
     ];
     let suffix_array_configs = [
-        SuffixArrayConfig::NotCompressed,
+        SuffixArrayConfig::Uncompressed,
         SuffixArrayConfig::Compressed(2),
         SuffixArrayConfig::Compressed(3),
         SuffixArrayConfig::Compressed(4),

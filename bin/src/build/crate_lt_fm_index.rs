@@ -25,27 +25,45 @@ pub fn build_index(
 
     if treat_t_as_wildcard {
         // Block2 사용 (ACG만 인덱싱)
+        // Build time 측정
+        let build_start_time = std::time::Instant::now();
         let lt_fm_index = LtFmIndex::<u32, Block2<u64>>::build(
             text.to_vec(),
             &symbols,
             sasr as u32,
             klts as u32,
         )?;
+        let build_time = build_start_time.elapsed();
+        println!("Build time: {:.2?}", build_time);
+
+        // Save time 측정
+        let save_start_time = std::time::Instant::now();
         let output_path = data_dir.join("lt-fm-index-block2.blob");
         let mut file = File::create(&output_path)?;
         lt_fm_index.save_to(&mut file)?;
+        let save_time = save_start_time.elapsed();
+        println!("Save time: {:.2?}", save_time);
         println!("Index saved to: {}", output_path.display());
     } else {
         // Block3 사용 (ACGT 모두 인덱싱)
+        // Build time 측정
+        let build_start_time = std::time::Instant::now();
         let lt_fm_index = LtFmIndex::<u32, Block3<u64>>::build(
             text.to_vec(),
             &symbols,
             sasr as u32,
             klts as u32,
         )?;
+        let build_time = build_start_time.elapsed();
+        println!("Build time: {:.2?}", build_time);
+
+        // Save time 측정
+        let save_start_time = std::time::Instant::now();
         let output_path = data_dir.join("lt-fm-index-block3.blob");
         let mut file = File::create(&output_path)?;
         lt_fm_index.save_to(&mut file)?;
+        let save_time = save_start_time.elapsed();
+        println!("Save time: {:.2?}", save_time);
         println!("Index saved to: {}", output_path.display());
     }
 
