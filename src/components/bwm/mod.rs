@@ -1,4 +1,4 @@
-use crate::core::Position;
+use crate::Position;
 use super::{Aligned,Header, View};
 
 pub mod blocks;

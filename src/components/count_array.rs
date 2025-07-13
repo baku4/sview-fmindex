@@ -1,6 +1,6 @@
 use zerocopy::IntoBytes;
 
-use crate::core::Position;
+use crate::Position;
 use super::{EncodingTable, Aligned, Header, View};
 
 #[repr(C)]

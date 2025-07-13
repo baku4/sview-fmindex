@@ -1,4 +1,4 @@
-use crate::core::Position;
+use crate::Position;
 use suffix_array::suffix_array as get_suffix_array;
 use bwt::bwt as get_bwt;
 

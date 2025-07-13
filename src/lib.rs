@@ -1,12 +1,12 @@
 // Core types
-mod core;
-pub use core::Position; // Export to crate root
+mod text_length;
+pub use text_length::Position;
 // Header & View to compose FmIndex
 mod components;
-pub use components::{Block, blocks}; // Export to crate root
+pub use components::{Block, blocks};
 // Builder for FmIndex
 mod builder;
-pub use builder::{FmIndexBuilder, BuildError, build_config}; // Export to crate root
+pub use builder::{FmIndexBuilder, BuildError, build_config};
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct FmIndex<'a, P: Position, B: Block> {
