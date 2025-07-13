@@ -58,12 +58,12 @@ pub fn locate_patterns(
             sview_mmap::locate_patterns(&data_dir, treat_t_as_wildcard)?;
         }
     }
-    let locate_time = locate_start_time.elapsed();
+    let locate_time = locate_start_time.elapsed().as_nanos();
     
-    let total_time = total_start_time.elapsed();
+    let total_time = total_start_time.elapsed().as_nanos();
     println!("Pattern location completed successfully!");
-    println!("Locate time: {:.2?}", locate_time);
-    println!("Total time: {:.2?}", total_time);
+    println!("Locate time: {} ns", locate_time);
+    println!("Total time: {} ns", total_time);
     
     Ok(())
 }

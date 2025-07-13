@@ -59,15 +59,15 @@ pub fn build_index(
         // Build time 측정
         let build_start_time = std::time::Instant::now();
         builder.build(text.to_vec(), &mut blob)?;
-        let build_time = build_start_time.elapsed();
-        println!("Build time: {:.2?}", build_time);
+        let build_time = build_start_time.elapsed().as_nanos();
+        println!("Build time: {} ns", build_time);
 
         // Save time 측정
         let save_start_time = std::time::Instant::now();
         let output_path = data_dir.join("sview-memory-block2.blob");
         fs::write(&output_path, &blob)?;
-        let save_time = save_start_time.elapsed();
-        println!("Save time: {:.2?}", save_time);
+        let save_time = save_start_time.elapsed().as_nanos();
+        println!("Save time: {} ns", save_time);
         println!("Index saved to: {}", output_path.display());
     } else {
         // Block3 사용 (ACGT 모두 인덱싱)
@@ -85,15 +85,15 @@ pub fn build_index(
         // Build time 측정
         let build_start_time = std::time::Instant::now();
         builder.build(text.to_vec(), &mut blob)?;
-        let build_time = build_start_time.elapsed();
-        println!("Build time: {:.2?}", build_time);
+        let build_time = build_start_time.elapsed().as_nanos();
+        println!("Build time: {} ns", build_time);
 
         // Save time 측정
         let save_start_time = std::time::Instant::now();
         let output_path = data_dir.join("sview-memory-block3.blob");
         fs::write(&output_path, &blob)?;
-        let save_time = save_start_time.elapsed();
-        println!("Save time: {:.2?}", save_time);
+        let save_time = save_start_time.elapsed().as_nanos();
+        println!("Save time: {} ns", save_time);
         println!("Index saved to: {}", output_path.display());
     }
 

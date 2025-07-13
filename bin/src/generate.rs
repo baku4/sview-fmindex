@@ -57,9 +57,9 @@ pub fn generate_data(
     fs::write(&pattern_path, pattern_content)?;
     println!("Pattern file created: {}", pattern_path.display());
 
-    let total_time = start_time.elapsed();
+    let total_time = start_time.elapsed().as_nanos();
     println!("Data generation completed successfully!");
-    println!("Total time: {:.2?}", total_time);
+    println!("Total time: {} ns", total_time);
     
     Ok(())
 } 

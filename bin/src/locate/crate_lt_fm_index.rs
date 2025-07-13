@@ -14,9 +14,9 @@ where
     
     // Blob 로딩 시간 측정
     let load_start_time = std::time::Instant::now();
-    let blob = std::fs::read(&blob_path)?;
-    let lt_fm_index = LtFmIndex::<u32, B>::load_from(&blob[..])?;
-    let load_time = load_start_time.elapsed();
+    let file = std::fs::File::open(&blob_path)?;
+    let lt_fm_index = LtFmIndex::<u32, B>::load_from(&file)?;
+    let load_time = load_start_time.elapsed().as_nanos();
     
     let result_path = data_dir.join(format!("{}-results.txt", blob_stem));
 
@@ -34,10 +34,10 @@ where
     });
 
     writer.flush()?;
-    let locate_time = locate_start_time.elapsed();
+    let locate_time = locate_start_time.elapsed().as_nanos();
     
-    println!("Blob loading time: {:.2?}", load_time);
-    println!("Locate processing time: {:.2?}", locate_time);
+    println!("Blob loading time: {} ns", load_time);
+    println!("Locate processing time: {} ns", locate_time);
     
     Ok(result_path)
 }

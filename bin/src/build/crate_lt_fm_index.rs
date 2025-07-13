@@ -33,16 +33,16 @@ pub fn build_index(
             sasr as u32,
             klts as u32,
         )?;
-        let build_time = build_start_time.elapsed();
-        println!("Build time: {:.2?}", build_time);
+        let build_time = build_start_time.elapsed().as_nanos();
+        println!("Build time: {} ns", build_time);
 
         // Save time 측정
         let save_start_time = std::time::Instant::now();
         let output_path = data_dir.join("lt-fm-index-block2.blob");
         let mut file = File::create(&output_path)?;
         lt_fm_index.save_to(&mut file)?;
-        let save_time = save_start_time.elapsed();
-        println!("Save time: {:.2?}", save_time);
+        let save_time = save_start_time.elapsed().as_nanos();
+        println!("Save time: {} ns", save_time);
         println!("Index saved to: {}", output_path.display());
     } else {
         // Block3 사용 (ACGT 모두 인덱싱)
@@ -54,16 +54,16 @@ pub fn build_index(
             sasr as u32,
             klts as u32,
         )?;
-        let build_time = build_start_time.elapsed();
-        println!("Build time: {:.2?}", build_time);
+        let build_time = build_start_time.elapsed().as_nanos();
+        println!("Build time: {} ns", build_time);
 
         // Save time 측정
         let save_start_time = std::time::Instant::now();
         let output_path = data_dir.join("lt-fm-index-block3.blob");
         let mut file = File::create(&output_path)?;
         lt_fm_index.save_to(&mut file)?;
-        let save_time = save_start_time.elapsed();
-        println!("Save time: {:.2?}", save_time);
+        let save_time = save_start_time.elapsed().as_nanos();
+        println!("Save time: {} ns", save_time);
         println!("Index saved to: {}", output_path.display());
     }
 

@@ -68,9 +68,9 @@ pub fn build_indices(
         }
     }
     
-    let total_time = total_start_time.elapsed();
+    let total_time = total_start_time.elapsed().as_nanos();
     println!("Index building completed successfully!");
-    println!("Total time: {:.2?}", total_time);
+    println!("Total time: {} ns", total_time);
     
     Ok(())
 } 

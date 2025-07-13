@@ -13,7 +13,7 @@ fn locate_and_write_results<B: Block>(
     let load_start_time = std::time::Instant::now();
     let blob = std::fs::read(&blob_path)?;
     let fm_index = FmIndex::<u32, B>::load(&blob)?;
-    let load_time = load_start_time.elapsed();
+    let load_time = load_start_time.elapsed().as_nanos();
     
     let result_path = data_dir.join(format!("{}-results.txt", blob_stem));
 
@@ -30,10 +30,10 @@ fn locate_and_write_results<B: Block>(
     });
 
     writer.flush()?;
-    let locate_time = locate_start_time.elapsed();
+    let locate_time = locate_start_time.elapsed().as_nanos();
     
-    println!("Blob loading time: {:.2?}", load_time);
-    println!("Locate processing time: {:.2?}", locate_time);
+    println!("Blob loading time: {} ns", load_time);
+    println!("Locate processing time: {} ns", locate_time);
     
     Ok(result_path)
 }

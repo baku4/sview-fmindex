@@ -73,8 +73,8 @@ pub fn build_index(
         // Build time 측정
         let build_start_time = std::time::Instant::now();
         builder.build(text.to_vec(), &mut mmap)?;
-        let build_time = build_start_time.elapsed();
-        println!("Build time: {:.2?}", build_time);
+        let build_time = build_start_time.elapsed().as_nanos();
+        println!("Build time: {} ns", build_time);
         
         // mmap을 디스크에 동기화
         mmap.flush()?;
@@ -110,8 +110,8 @@ pub fn build_index(
         // Build time 측정
         let build_start_time = std::time::Instant::now();
         builder.build(text.to_vec(), &mut mmap)?;
-        let build_time = build_start_time.elapsed();
-        println!("Build time: {:.2?}", build_time);
+        let build_time = build_start_time.elapsed().as_nanos();
+        println!("Build time: {} ns", build_time);
         
         // mmap을 디스크에 동기화
         mmap.flush()?;
