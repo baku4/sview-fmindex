@@ -3,6 +3,7 @@ name = "sview-fmindex"
 version = "0.1.0"
 authors = ["baku4 <bahkhun@gmail.com>"]
 edition = "2024"
+license = "MIT"
 description = "FM-index library with slice view architecture for efficient text indexing and pattern matching"
 repository = "https://github.com/baku4/sview-fmindex"
 homepage = "https://github.com/baku4/sview-fmindex"
