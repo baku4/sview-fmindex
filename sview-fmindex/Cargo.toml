@@ -14,7 +14,7 @@ keywords = [
     "fmindex",
     "bioinformatics",
     "pattern-matching",
-    "burrows-wheeler-transform"
+    "burrows-wheeler"
 ]
 categories = [
     "science",
