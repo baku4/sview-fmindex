@@ -1,10 +1,11 @@
 [package]
-name = "fmindex-benchmark"
+name = "sview-fmindex-bench"
 version = "0.1.0"
 edition = "2021"
+publish = false
 
 [[bin]]
-name = "fmindex-benchmark"
+name = "sview-fmindex-bench"
 path = "src/main.rs"
 
 [dependencies]
@@ -12,7 +13,7 @@ path = "src/main.rs"
 lt-fm-index = { version = "0.7.0" }
 
 # sview-fmindex 사용 (로컬 크레이트)
-sview-fmindex = { path = ".." }
+sview-fmindex = { path = "../sview-fmindex" }
 
 # 유틸리티
 clap = { version = "4.0", features = ["derive"] }

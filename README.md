@@ -70,3 +70,26 @@ locations.sort();
 // Using the b"XXXXX", b"YYYYY", or b"!@#$%" gives the same result.
 assert_eq!(locations, vec![25,26]);
 ```
+
+## Benchmarks
+
+### 1 Gbp nucleotide text · 20 bp pattern
+
+| Load strategy        | Avg RSS      | Peak RSS     | Blob load (ms) | Locate per pattern (ns) |
+| -------------------- | ------------ | ------------ | -------------- | ----------------------- |
+| Full in‑memory       | **2.82 GiB** | **4.50 GiB** | 2,388          | 1,369 ns                |
+| `mmap` (no `Advice`) | **0.48 GiB** | **0.52 GiB** | 0.04           | 1,365 ns                |
+
+<details>
+<summary>Test setup</summary>
+
+- **Data**
+  - **Text:** 1 Gbp random nucleotide
+  - **Patterns:** 1 000 000 × 20 bp
+  - **Index:** Position: `u32`, Block: `Block2<u64>`, Uncompressed
+- **Hardware**
+  - **CPU** Intel Xeon E5‑2680 v4 @ 2.40 GHz
+  - **Memory** 256 GiB
+  - **OS (Kernel)** Ubuntu 20.04.2 LTS (5.4.0‑171‑generic)
+  - **Page size** 4 KiB
+</details>
