@@ -4,6 +4,7 @@ use criterion::{
 };
 use sview_fmindex::{
     FmIndex, FmIndexBuilder, Position, Block,
+    build_config::{LookupTableConfig, SuffixArrayConfig},
     blocks::{Block2, Block3, Block4, Block5, Block6},
 };
 use super::random_data::{
@@ -66,12 +67,10 @@ pub fn bench_memory_vs_disk_mmap_locate<P: Position, B: Block + 'static>(c: &mut
     
     // FM-index 빌드
     let characters_by_index = chr_list.chunks(1).map(|c| c).collect::<Vec<_>>();
-    let builder = FmIndexBuilder::<P, B>::init(
-        text.len(),
-        &characters_by_index,
-        2, // sasr
-        3, // ltks
-    ).unwrap();
+    let builder = FmIndexBuilder::<P, B>::init(text.len(),  &characters_by_index).unwrap()
+        .set_suffix_array_config(SuffixArrayConfig::Compressed(2)).unwrap()
+        .set_lookup_table_config(LookupTableConfig::KmerSize(3)).unwrap();
+
     
     let blob_size = builder.blob_size();
     let mut blob: Vec<u8> = vec![0; blob_size];
