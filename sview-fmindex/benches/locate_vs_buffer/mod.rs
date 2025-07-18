@@ -25,14 +25,26 @@ fn locate_multiple_patterns<P: Position, B: Block>(
     });
 }
 
-pub fn perf_of_locate(c: &mut Criterion) {
-    let mut group = c.benchmark_group("locate");
+#[inline]
+fn locate_multiple_patterns_to_buffer<P: Position, B: Block>(
+    fi: &FmIndex<P, B>,
+    patterns: &[Vec<u8>]
+) {
+    let mut buffer = Vec::new();
+    patterns.iter().for_each(|pattern| {
+        buffer.clear();
+        fi.locate_pattern_to_buffer(pattern, &mut buffer);
+    });
+}
 
-    let text_len = 1_000; // 100_000_000;
+pub fn compare_locate_vs_buffer(c: &mut Criterion) {
+    let mut group = c.benchmark_group("locate_vs_buffer");
+
+    let text_len = 100_000;
     let text = gen_rand_text(b"ACGT", text_len, text_len);
 
-    let n_patterns = 10; // 1000;
-    let pattern_length = [10, 20, 30, 40, 50];
+    let n_patterns = 1_000;
+    let pattern_length = [4, 6, 8, 10];
     let patterns_by_length: Vec<Vec<Vec<u8>>> = pattern_length.iter().map(|l| {
         let patterns = (0..n_patterns).map(|_| {
             gen_rand_pattern(&text, *l, *l)
@@ -40,8 +52,8 @@ pub fn perf_of_locate(c: &mut Criterion) {
         patterns
     }).collect();   
 
-    let ss_list = [1, 2, 4, 8];
-    let lk_list = [1, 2, 4, 8];
+    let ss_list = [4];
+    let lk_list = [4];
 
     let characters_by_index: &[&[u8]] = &[b"A", b"C", b"G"];
 
@@ -65,10 +77,21 @@ pub fn perf_of_locate(c: &mut Criterion) {
 
                         for (pattern_len, patterns) in pattern_length.iter().zip(patterns_by_length.iter()) {
                             group.bench_with_input(
-                                BenchmarkId::new(&tag, pattern_len),
+                                BenchmarkId::new(format!("{}_locate_pattern", tag), pattern_len),
                                 &pattern_len,
                                 |b, _i| b.iter(|| {
                                     locate_multiple_patterns(
+                                        black_box(&fi),
+                                        black_box(patterns),
+                                    );
+                                }
+                            ));
+
+                            group.bench_with_input(
+                                BenchmarkId::new(format!("{}_locate_pattern_to_buffer", tag), pattern_len),
+                                &pattern_len,
+                                |b, _i| b.iter(|| {
+                                    locate_multiple_patterns_to_buffer(
                                         black_box(&fi),
                                         black_box(patterns),
                                     );
@@ -78,26 +101,10 @@ pub fn perf_of_locate(c: &mut Criterion) {
                     }
                 };
             }
-            TestCode!(u32, Block2<u32>, "LFI_u32_b2_v32");
-            TestCode!(u32, Block2<u64>, "LFI_u32_b2_v64");
-            TestCode!(u32, Block2<u128>, "LFI_u32_b2_v128");
-            TestCode!(u32, Block3<u32>, "LFI_u32_b3_v32");
-            TestCode!(u32, Block3<u64>, "LFI_u32_b3_v64");
-            TestCode!(u32, Block3<u128>, "LFI_u32_b3_v128");
-            TestCode!(u32, Block4<u32>, "LFI_u32_b4_v32");
-            TestCode!(u32, Block4<u64>, "LFI_u32_b4_v64");
-            TestCode!(u32, Block4<u128>, "LFI_u32_b4_v128");
-            TestCode!(u64, Block2<u32>, "LFI_u64_b2_v32");
-            TestCode!(u64, Block2<u64>, "LFI_u64_b2_v64");
-            TestCode!(u64, Block2<u128>, "LFI_u64_b2_v128");
-            TestCode!(u64, Block3<u32>, "LFI_u64_b3_v32");
-            TestCode!(u64, Block3<u64>, "LFI_u64_b3_v64");
-            TestCode!(u64, Block3<u128>, "LFI_u64_b3_v128");
-            TestCode!(u64, Block4<u32>, "LFI_u64_b4_v32");
-            TestCode!(u64, Block4<u64>, "LFI_u64_b4_v64");
-            TestCode!(u64, Block4<u128>, "LFI_u64_b4_v128");
+            TestCode!(u32, Block2<u64>, "FI_u32_b2_v64");
+            TestCode!(u32, Block4<u64>, "FI_u32_b4_v64");
         }
     }
 
     group.finish();
-}
+} 
