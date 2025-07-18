@@ -10,7 +10,7 @@ mod random_data;
 mod counting_bit;
 use counting_bit::bench_counting_bits_of_u64;
 
-// Sort algorithm
+// TODO: Sort algorithm
 #[cfg(feature = "fastbwt")]
 mod sorting;
 #[cfg(feature = "fastbwt")]
@@ -20,14 +20,15 @@ use sorting::bench_burrow_wheeler_transform;
 mod locate;
 use locate::perf_of_locate;
 
+// Locate with raw index
 mod locate_with_raw_index;
 use locate_with_raw_index::compare_locate_vs_locate_from_raw_index;
 
-// mod perf_by_vector_size;
-// use perf_by_vector_size::{
-//     build_no_text, locate_no_text,
-// };
+// Locate vs buffer
+mod locate_vs_buffer;
+use locate_vs_buffer::compare_locate_vs_buffer;
 
+// Memory vs disk mmap
 mod memory_vs_disk_mmap;
 use memory_vs_disk_mmap::{
     bench_memory_vs_disk_mmap_locate_u32_block2,
@@ -37,9 +38,7 @@ use memory_vs_disk_mmap::{
 
 criterion_group!(
     benches,
-    bench_memory_vs_disk_mmap_locate_u32_block2,
-    bench_memory_vs_disk_mmap_locate_u64_block2,
-    bench_memory_vs_disk_mmap_locate_u64_block4,
+    compare_locate_vs_buffer,
 );
 #[cfg(feature = "fastbwt")]
 criterion_group!(

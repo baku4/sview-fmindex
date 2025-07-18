@@ -9,6 +9,15 @@ impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
     fn get_locations(&self, pos_range: (P, P)) -> Vec<P> {
         let mut locations: Vec<P> = Vec::with_capacity((pos_range.1 - pos_range.0).as_usize());
 
+        self.write_locations_to_buffer(pos_range, &mut locations);
+        locations
+    }
+    #[inline]
+    fn write_locations_to_buffer(
+        &self,
+        pos_range: (P, P),
+        locations: &mut Vec<P>,
+    ) {
         'each_pos: for mut pos in P::as_vec_in_range(&pos_range.0, &pos_range.1) {
             let mut offset: P = P::ZERO;
             while pos % self.suffix_array_view.sampling_ratio() != P::ZERO { 
@@ -27,6 +36,5 @@ impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
             let location = self.suffix_array_view.get_location_of(pos) + offset;
             locations.push(location);
         }
-        locations
     }
 }

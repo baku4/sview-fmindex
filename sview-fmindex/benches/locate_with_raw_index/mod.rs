@@ -69,9 +69,7 @@ pub fn compare_locate_vs_locate_from_raw_index(c: &mut Criterion) {
     for ss in ss_list {
         for lk in lk_list {
             println!("# SS: {}, LK: {}", ss, lk);
-
             
-
             macro_rules! TestCode {
                 ( $pos: ty, $blk: ty, $tagprefix: tt) => {
                     {
@@ -82,7 +80,8 @@ pub fn compare_locate_vs_locate_from_raw_index(c: &mut Criterion) {
                         let builder = FmIndexBuilder::<$pos, $blk>::init(text.len(),  &characters_by_index).unwrap()
                             .set_suffix_array_config(SuffixArrayConfig::Compressed(ss)).unwrap()
                             .set_lookup_table_config(LookupTableConfig::KmerSize(lk)).unwrap();
-                        let mut blob = Vec::new();
+                        let blob_size = builder.blob_size();
+                        let mut blob = vec![0; blob_size];
                         builder.build(text.clone(), &mut blob).unwrap();
                         let fi = FmIndex::<$pos, $blk>::load(&blob).unwrap();
                         let duration = start.elapsed();
