@@ -1,5 +1,8 @@
 # sview-fmindex
 
+[![crates.io](https://img.shields.io/crates/v/sview-fmindex.svg?style=flat-square)](https://crates.io/crates/sview-fmindex)
+[![license](https://img.shields.io/github/license/baku4/sview-fmindex?style=flat-square)](https://github.com/baku4/sview-fmindex/blob/main/LICENSE)
+
 ***Data is in single blob, and fm-index is slice view.***
 
 `sview-fmindex` is a Rust library for building FM-indexes into pre-allocated blobs and using them with minimal copying through slice views.
@@ -93,3 +96,19 @@ assert_eq!(locations, vec![25,26]);
   - **OS (Kernel)** Ubuntu 20.04.2 LTS (5.4.0‑171‑generic)
   - **Page size** 4 KiB
 </details>
+
+## References
+
+**Base repo**: This repository was forked from [`baku4/lt-fm-index`](https://github.com/baku4/lt-fm-index) (v0.7.0, commit `1327896`).
+
+**FM-index implementation:**
+- Ferragina, P., & Manzini, G. (2004). An Alphabet-Friendly FM-Index. *String Processing and Information Retrieval*, 150-160.
+- Wang, Y., et al. (2018). Accelerating FM-index Search for Genomic Data Processing. *Proceedings of the 47th International Conference on Parallel Processing*.
+
+***K-mer* Lookup table implementation:**
+- Anderson, T., & Wheeler, T. J. (2021). An optimized FM-index library for nucleotide and amino acid search. *bioRxiv*.
+- Anderson, T., & Wheeler, T. J. (2021). An optimized FM-index library for nucleotide and amino acid search. *Algorithms for Molecular Biology*, 16(1), 25.
+
+**Burrows-Wheeler Transform:**
+- [libdivsufsort](https://github.com/y-256/libdivsufsort) by Yuta Mori.
+- [Rust-Bio](https://github.com/rust-bio/rust-bio): A fast and safe bioinformatics library, introduced in Köster, J. (2016), "Rust-Bio: a fast and safe bioinformatics library," *Bioinformatics*, 32(3), 444-446.
