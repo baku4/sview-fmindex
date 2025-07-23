@@ -106,7 +106,6 @@ assert_eq!(locations, vec![25,26]);
 - Wang, Y., et al. (2018). Accelerating FM-index Search for Genomic Data Processing. *Proceedings of the 47th International Conference on Parallel Processing*.
 
 ***K-mer* Lookup table implementation:**
-- Anderson, T., & Wheeler, T. J. (2021). An optimized FM-index library for nucleotide and amino acid search. *bioRxiv*.
 - Anderson, T., & Wheeler, T. J. (2021). An optimized FM-index library for nucleotide and amino acid search. *Algorithms for Molecular Biology*, 16(1), 25.
 
 **Burrows-Wheeler Transform:**
