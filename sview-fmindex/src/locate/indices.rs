@@ -11,6 +11,12 @@ impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
         let pos_range = self.get_pos_range_of_indices(indices);
         self.get_locations(pos_range)
     }
+    /// Locate all occurrences with the indices & write to buffer
+    pub fn locate_indices_to_buffer(&self, indices: &[u8], buffer: &mut Vec<P>) {
+        let pos_range = self.get_pos_range_of_indices(indices);
+        self.write_locations_to_buffer(pos_range, buffer);
+    }
+
     /// Count the number of occurrences with the reverse iterator of indices
     pub fn count_indices_rev_iter<I: Iterator<Item = u8>>(&self, indices_rev_iter: I) -> P {
         let pos_range = self.get_pos_range_from_indices_rev_iter(indices_rev_iter);
@@ -20,6 +26,11 @@ impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
     pub fn locate_indices_rev_iter<I: Iterator<Item = u8>>(&self, indices_rev_iter: I) -> Vec<P> {
         let pos_range = self.get_pos_range_from_indices_rev_iter(indices_rev_iter);
         self.get_locations(pos_range)
+    }
+    /// Locate all occurrences with the reverse iterator of indices & write to buffer
+    pub fn locate_indices_rev_iter_to_buffer<I: Iterator<Item = u8>>(&self, indices_rev_iter: I, buffer: &mut Vec<P>) {
+        let pos_range = self.get_pos_range_from_indices_rev_iter(indices_rev_iter);
+        self.write_locations_to_buffer(pos_range, buffer);
     }
 
     // Get the position range of the indices
