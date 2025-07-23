@@ -15,22 +15,27 @@ fn locate_and_write_results<B: Block>(
     let load_start_time = std::time::Instant::now();
     let file = fs::File::open(&blob_path)?;
     let mmap = unsafe { Mmap::map(&file)? };
-    // mmap advice: 환경변수 3개로 선택 적용 (우선순위: RANDOM > SEQUENTIAL > DONTDUMP)
-    if std::env::var("MMAP_ADVICE_RANDOM").is_ok() {
-        println!("Applying MADV_RANDOM advice to mmap");
-        mmap.advise(memmap2::Advice::Random)?;
-    } else if std::env::var("MMAP_ADVICE_SEQUENTIAL").is_ok() {
-        println!("Applying MADV_SEQUENTIAL advice to mmap");
-        mmap.advise(memmap2::Advice::Sequential)?;
-    } else if std::env::var("MMAP_ADVICE_DONTDUMP").is_ok() {
-        #[cfg(target_os = "linux")]
-        {
-            println!("Applying MADV_DONTDUMP advice to mmap");
-            mmap.advise(memmap2::Advice::DontDump)?;
-        }
-        #[cfg(not(target_os = "linux"))]
-        {
-            println!("MADV_DONTDUMP advice is only supported on Linux. Skipping.");
+    
+    #[cfg(unix)]
+    {
+        use memmap2::Advice;
+        // mmap advice: 환경변수 3개로 선택 적용 (우선순위: RANDOM > SEQUENTIAL > DONTDUMP)
+        if std::env::var("MMAP_ADVICE_RANDOM").is_ok() {
+            println!("Applying MADV_RANDOM advice to mmap");
+            mmap.advise(Advice::Random)?;
+        } else if std::env::var("MMAP_ADVICE_SEQUENTIAL").is_ok() {
+            println!("Applying MADV_SEQUENTIAL advice to mmap");
+            mmap.advise(Advice::Sequential)?;
+        } else if std::env::var("MMAP_ADVICE_DONTDUMP").is_ok() {
+            #[cfg(target_os = "linux")]
+            {
+                println!("Applying MADV_DONTDUMP advice to mmap");
+                mmap.advise(Advice::DontDump)?;
+            }
+            #[cfg(not(target_os = "linux"))]
+            {
+                println!("MADV_DONTDUMP advice is only supported on Linux. Skipping.");
+            }
         }
     }
     
