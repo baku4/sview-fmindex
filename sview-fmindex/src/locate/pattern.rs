@@ -27,6 +27,11 @@ impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
         let pos_range = self.get_pos_range_from_pattern_rev_iter(pattern_rev_iter);
         self.get_locations(pos_range)
     }
+    /// Locate all occurrences with the reverse iterator of pattern & write to buffer
+    pub fn locate_pattern_rev_iter_to_buffer<I: Iterator<Item = u8>>(&self, pattern_rev_iter: I, buffer: &mut Vec<P>) {
+        let pos_range = self.get_pos_range_from_pattern_rev_iter(pattern_rev_iter);
+        self.write_locations_to_buffer(pos_range, buffer);
+    }
 
     // Get the position range of the text
     fn get_pos_range_of_pattern(&self, pattern: &[u8]) -> (P, P) {
