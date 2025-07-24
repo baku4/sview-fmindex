@@ -5,7 +5,7 @@ use crate::{
     components::{
         Header, View,
         // headers
-        MagicNumber, EncodingTable, CountArrayHeader, SuffixArrayHeader, BwmHeader,
+        MagicNumber, TextEncoder, CountArrayHeader, SuffixArrayHeader, BwmHeader,
         // views
         CountArrayView, SuffixArrayView, BwmView,
     },
@@ -24,7 +24,7 @@ pub enum LoadError {
 }
 
 
-impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
+impl<'a, P: Position, B: Block, E: TextEncoder> FmIndex<'a, P, B, E> {
     /// Load fm-index from blob
     pub fn load(blob: &'a [u8]) -> Result<Self, LoadError> {
         // Load headers
@@ -32,7 +32,7 @@ impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
         if !(magic_number.is_valid() && magic_number.is_supported_version()) {
             return Err(LoadError::InvalidFormat);
         }
-        let (encoding_table, remaining_bytes) = EncodingTable::read_from_blob::<B>(remaining_bytes);
+        let (text_encoder, remaining_bytes) = E::read_from_blob::<B>(remaining_bytes);
         let (count_array_header, remaining_bytes) = CountArrayHeader::read_from_blob::<B>(remaining_bytes);
         let (suffix_array_header, remaining_bytes) = SuffixArrayHeader::read_from_blob::<B>(remaining_bytes);
         let (bwm_header, body_blob) = BwmHeader::read_from_blob::<B>(remaining_bytes);
@@ -47,7 +47,7 @@ impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
         if actual_body_size != expected_body_size {
             let header_size = {
                 magic_number.aligned_size::<B>()
-                + encoding_table.aligned_size::<B>()
+                + text_encoder.aligned_size::<B>()
                 + count_array_header.aligned_size::<B>()
                 + suffix_array_header.aligned_size::<B>()
                 + bwm_header.aligned_size::<B>()
@@ -74,7 +74,7 @@ impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
 
         Ok(Self {
             magic_number,
-            encoding_table,
+            text_encoder,
             count_array_header,
             suffix_array_header,
             bwm_header,

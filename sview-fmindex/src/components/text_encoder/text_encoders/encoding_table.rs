@@ -1,15 +1,19 @@
-use super::Header;
+use super::{Header, TextEncoder};
 
 /// A table mapping symbols to their indices in the FM-index
 #[repr(C)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[derive(zerocopy::FromBytes, zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::KnownLayout)]
 pub struct EncodingTable([u8; 256]);
+impl TextEncoder for EncodingTable {
+    fn idx_of(&self, sym: u8) -> u8 {
+        unsafe { *self.0.get_unchecked(sym as usize) }
+    }
+}
 
 impl EncodingTable {
     #[inline]
-    pub fn new<T>(symbols: &[T]) -> Self
-    where
+    pub fn new<T>(symbols: &[T]) -> Self where
         T: AsRef<[u8]>,
     {
         let symbol_count = symbols.len() as u32;
@@ -18,14 +22,6 @@ impl EncodingTable {
             sym.as_ref().iter().for_each(|x| table[*x as usize] = idx as u8);
         });
         Self(table)
-    }
-    #[inline(always)]
-    pub fn idx_of(&self, sym: u8) -> u8 {
-        unsafe { *self.0.get_unchecked(sym as usize) }
-    }
-
-    pub fn get_encoding_table(&self) -> &[u8] {
-        &self.0
     }
 }
 

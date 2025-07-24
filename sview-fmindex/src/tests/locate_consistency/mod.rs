@@ -1,8 +1,8 @@
-use crate::Position;
 use crate::{
-    FmIndex, FmIndexBuilder,
+    FmIndex, FmIndexBuilder, TextEncoder, Position,
     build_config::{LookupTableConfig, SuffixArrayConfig},
     Block, blocks::{Block2, Block3, Block4, Block5, Block6},
+    text_encoders::EncodingTable,
 };
 use crate::tests::{
     random_data::{
@@ -26,7 +26,7 @@ fn assert_locate_consistency<P: Position, B: Block>(
     }
     let characters_by_index = chr_list.chunks(1).map(|c| c).collect::<Vec<_>>();
     
-    let builder = FmIndexBuilder::<P, B>::new(text.len(), &characters_by_index).unwrap()
+    let builder = FmIndexBuilder::<P, B, EncodingTable>::new(text.len(), characters_by_index.len() as u32, EncodingTable::new(&characters_by_index)).unwrap()
         .set_lookup_table_config(LookupTableConfig::KmerSize(ltks)).unwrap()
         .set_suffix_array_config(SuffixArrayConfig::Compressed(sasr)).unwrap();
 
@@ -35,15 +35,15 @@ fn assert_locate_consistency<P: Position, B: Block>(
 
     builder.build(text.clone(), &mut blob).unwrap();
 
-    let fm_index = FmIndex::<P, B>::load(&blob).unwrap();
+    let fm_index = FmIndex::<P, B, EncodingTable>::load(&blob).unwrap();
 
     // Create encoding table for converting text to indices
-    let encoding_table = crate::components::EncodingTable::new(&characters_by_index);
+    let encoding_table = EncodingTable::new(&characters_by_index);
 
     patterns.iter().for_each(|pattern| {
         // Test count methods
-        let count_text = fm_index.count_pattern(pattern);
-        let count_text_rev_iter = fm_index.count_pattern_rev_iter(pattern.iter().rev().cloned());
+        let count_text = fm_index.count(pattern);
+        let count_text_rev_iter = fm_index.count_rev_iter(pattern.iter().rev().cloned());
         
         // Convert pattern to indices
         let pattern_indices: Vec<u8> = pattern.iter().map(|&c| encoding_table.idx_of(c)).collect();

@@ -33,13 +33,13 @@ pub trait View<'a> {
 }
 
 mod magic_number;
-mod encoding_table;
+mod text_encoder;
 mod count_array;
 mod suffix_array;
 mod bwm;
 
 pub use magic_number::MagicNumber;
-pub use encoding_table::EncodingTable;
+pub use text_encoder::{text_encoders, TextEncoder};
 pub use count_array::{CountArrayHeader, CountArrayView};
 pub use suffix_array::{SuffixArrayHeader, SuffixArrayView};
 pub use bwm::{BwmHeader, BwmView, Block, blocks};

@@ -4,28 +4,26 @@ fn example() {
 
 use crate::{FmIndexBuilder, FmIndex};
 use crate::blocks::Block2; // Block2 can index 3 types of symbols
+use crate::text_encoders::EncodingTable;
 
 // (1) Define characters to use
-let symbols: &[&[u8]] = &[
-    &[b'A', b'a'], // 'A' and 'a' are treated as the same
-    &[b'C', b'c'], // 'C' and 'c' are treated as the same
-    &[b'G', b'g'], // 'G' and 'g' are treated as the same
-];
-// Alternatively, you can use this simpler syntax:
-let symbols: &[&[u8]] = &[
-    b"Aa", b"Cc", b"Gg"
-];
+let symbols: &[&[u8]] = &[b"Aa", b"Cc", b"Gg"];
+let text_encoder = EncodingTable::new(symbols);
 
 // (2) Build index
 let text = b"CTCCGTACACCTGTTTCGTATCGGAXXYYZZ".to_vec();
-let builder = FmIndexBuilder::<u32, Block2<u64>>::new(text.len(), symbols).unwrap();
+let builder = FmIndexBuilder::<u32, Block2<u64>, EncodingTable>::new(
+    text.len(),
+    symbols.len() as u32,
+    text_encoder,
+).unwrap();
 // You have to prepare a blob to build the index.
 let blob_size = builder.blob_size();
 let mut blob = vec![0; blob_size];
 // Build the fm-index to the blob.
 builder.build(text, &mut blob).unwrap();
 // Load the fm-index from the blob.
-let fm_index = FmIndex::<u32, Block2<u64>>::load(&blob[..]).unwrap();
+let fm_index = FmIndex::<u32, Block2<u64>, EncodingTable>::load(&blob[..]).unwrap();
 
 // (3) Match with pattern
 let pattern = b"TA";

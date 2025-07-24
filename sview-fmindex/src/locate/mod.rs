@@ -1,11 +1,13 @@
-use super::{FmIndex, Position, Block};
+use super::{FmIndex, Position, Block, TextEncoder};
+
+mod with_text_encoder;
 
 // Plain text slice
 mod pattern;
 // Raw indices of each symbol in the pattern
 mod indices;
 
-impl<'a, P: Position, B: Block> FmIndex<'a, P, B> {
+impl<'a, P: Position, B: Block, E: TextEncoder> FmIndex<'a, P, B, E> {
     fn get_locations(&self, pos_range: (P, P)) -> Vec<P> {
         let mut locations: Vec<P> = Vec::with_capacity((pos_range.1 - pos_range.0).as_usize());
 

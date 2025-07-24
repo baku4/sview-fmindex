@@ -1,7 +1,7 @@
 use zerocopy::IntoBytes;
 
 use crate::Position;
-use super::{EncodingTable, Aligned, Header, View};
+use super::{TextEncoder, Aligned, Header, View};
 
 #[repr(C)]
 #[derive(zerocopy::FromBytes, zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::KnownLayout)]
@@ -76,10 +76,10 @@ impl CountArrayHeader {
         }
 
     }
-    pub fn count_and_encode_text<P: Position, A: Aligned>(
+    pub fn count_and_encode_text<P: Position, A: Aligned, E: TextEncoder>(
         &self,
         text: &mut Vec<u8>,
-        encoding_table: &EncodingTable,
+        text_encoder: &E,
         blob: &mut [u8],
     ) {
         // 1) Init
@@ -111,7 +111,7 @@ impl CountArrayHeader {
         // 2) Counting
         let mut table_index: usize = 0;
         text.iter_mut().rev().for_each(|sym| {
-            let symidx = encoding_table.idx_of(*sym);
+            let symidx = text_encoder.idx_of(*sym);
             // Transform sym to symidx + 1 (sentinel will be 0 for sorting)
             *sym = symidx + 1;
             // Add count to counts
@@ -203,14 +203,14 @@ impl<'a, P: Position> CountArrayView<'a, P> {
     // ================================================
     // For plain text
     //  - using pattern
-    pub fn get_initial_pos_range_and_idx_of_pattern(
+    pub fn get_initial_pos_range_and_idx_of_pattern<E: TextEncoder>(
         &self,
         pattern: &[u8],
-        encoding_table: &EncodingTable,
+        text_encoder: &E,
     ) -> ((P, P), usize) {
         let pattern_len = pattern.len();
         if pattern_len < self.lookup_table_kmer_size {
-            let start_idx = self.get_idx_of_kmer_count_table_of_pattern(pattern, encoding_table);
+            let start_idx = self.get_idx_of_kmer_count_table_of_pattern(pattern, text_encoder);
             let gap_btw_unsearched_kmer = self.kmer_multiplier[pattern_len - 1] - 1;
             let end_idx = start_idx + gap_btw_unsearched_kmer;
 
@@ -218,27 +218,27 @@ impl<'a, P: Position> CountArrayView<'a, P> {
             (pos_range, 0)
         } else {
             let sliced_pattern = &pattern[pattern.len() - self.lookup_table_kmer_size ..];
-            let start_idx = self.get_idx_of_kmer_count_table_of_pattern(sliced_pattern, encoding_table);
+            let start_idx = self.get_idx_of_kmer_count_table_of_pattern(sliced_pattern, text_encoder);
 
             let pos_range = (self.kmer_count_table[start_idx -1], self.kmer_count_table[start_idx]);
             (pos_range, pattern_len - self.lookup_table_kmer_size)
         }
     }
-    fn get_idx_of_kmer_count_table_of_pattern(
+    fn get_idx_of_kmer_count_table_of_pattern<E: TextEncoder>(
         &self,
         sliced_pattern: &[u8],
-        encoding_table: &EncodingTable,
+        text_encoder: &E,
     ) -> usize {
         sliced_pattern.iter().zip(self.kmer_multiplier.iter())
             .map(|(&sym, &mul_of_pos)| {
-                (encoding_table.idx_of(sym) + 1) as usize * mul_of_pos
+                (text_encoder.idx_of(sym) + 1) as usize * mul_of_pos
             }).sum()
     }
     //  - use reverse iter
-    pub fn get_initial_pos_range_and_idx_of_pattern_rev_iter<I: Iterator<Item = u8>>(
+    pub fn get_initial_pos_range_and_idx_of_pattern_rev_iter<I: Iterator<Item = u8>, E: TextEncoder>(
         &self,
         pattern_rev_iter: &mut I,
-        encoding_table: &EncodingTable,
+        text_encoder: &E,
     ) -> (P, P) {
         let mut sliced_pattern_size = 0;
         let mut start_idx= 0;
@@ -247,7 +247,7 @@ impl<'a, P: Position> CountArrayView<'a, P> {
             match pattern_rev_iter.next() {
                 Some(sym) => {
                     sliced_pattern_size += 1;
-                    start_idx += (encoding_table.idx_of(sym) + 1) as usize * self.kmer_multiplier[
+                    start_idx += (text_encoder.idx_of(sym) + 1) as usize * self.kmer_multiplier[
                         self.kmer_multiplier.len() - sliced_pattern_size as usize
                     ];
                 },

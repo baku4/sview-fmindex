@@ -1,8 +1,8 @@
-use crate::Position;
 use crate::{
-    FmIndex, FmIndexBuilder,
+    FmIndex, FmIndexBuilder, Position,
     build_config::{LookupTableConfig, SuffixArrayConfig},
     Block, blocks::{Block2, Block3, Block4, Block5, Block6},
+    text_encoders::EncodingTable,
 };
 use crate::tests::{
     random_data::{
@@ -24,7 +24,7 @@ fn assert_config_invariance<P: Position, B: Block>(
         return;
     }
     
-    let builder = FmIndexBuilder::<P, B>::new(text.len(), symbols).unwrap()
+    let builder = FmIndexBuilder::<P, B, EncodingTable>::new(text.len(), symbols.len() as u32, EncodingTable::new(symbols)).unwrap()
         .set_lookup_table_config(lt_config).unwrap()
         .set_suffix_array_config(sa_config).unwrap();
 
@@ -33,9 +33,9 @@ fn assert_config_invariance<P: Position, B: Block>(
 
     builder.build(text, &mut blob).unwrap();
 
-    let fm_index = FmIndex::<P, B>::load(&blob).unwrap();
+    let fm_index = FmIndex::<P, B, EncodingTable>::load(&blob).unwrap();
 
-    let mut result: Vec<u64> = fm_index.locate_pattern(pattern).into_iter().map(|x| x.as_u64()).collect();
+    let mut result: Vec<u64> = fm_index.locate(pattern).into_iter().map(|x| x.as_u64()).collect();
     result.sort();
     assert_eq!(&result, answer);
 }
@@ -73,12 +73,12 @@ fn test_config_invariance() {
             let pattern = gen_rand_pattern(&text, 10, 10);
         
             // Get Answer using default configuration
-            let base_builder = FmIndexBuilder::<u32, Block4<u32>>::new(text.len(), &symbols).unwrap();
+            let base_builder = FmIndexBuilder::<u32, Block4<u32>, EncodingTable>::new(text.len(), symbols.len() as u32, EncodingTable::new(&symbols)).unwrap();
             let blob_size = base_builder.blob_size();
             let mut blob: Vec<u8> = vec![0; blob_size];
             base_builder.build(text.clone(), &mut blob).unwrap();
-            let base_fm_index = FmIndex::<u32, Block4<u32>>::load(&blob).unwrap();
-            let mut answer: Vec<u64> = base_fm_index.locate_pattern(&pattern).into_iter().map(|x| x.as_u64()).collect();
+            let base_fm_index = FmIndex::<u32, Block4<u32>, EncodingTable>::load(&blob).unwrap();
+            let mut answer: Vec<u64> = base_fm_index.locate(&pattern).into_iter().map(|x| x.as_u64()).collect();
             answer.sort();
         
             macro_rules! test_type_of {

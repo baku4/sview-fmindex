@@ -1,8 +1,8 @@
-use crate::Position;
 use crate::{
-    FmIndex, FmIndexBuilder,
+    FmIndex, FmIndexBuilder, Position,
     build_config::{LookupTableConfig, SuffixArrayConfig},
     Block, blocks::{Block2, Block3, Block4, Block5, Block6},
+    text_encoders::EncodingTable,
 };
 use crate::tests::{
     random_data::{
@@ -34,7 +34,7 @@ fn assert_accurate_fm_index<P: Position, B: Block>(
     }
     let characters_by_index = chr_list.chunks(1).map(|c| c).collect::<Vec<_>>();
     
-    let builder = FmIndexBuilder::<P, B>::new(text.len(), &characters_by_index).unwrap()
+    let builder = FmIndexBuilder::<P, B, EncodingTable>::new(text.len(), characters_by_index.len() as u32, EncodingTable::new(&characters_by_index)).unwrap()
         .set_lookup_table_config(LookupTableConfig::KmerSize(ltks as u32)).unwrap()
         .set_suffix_array_config(SuffixArrayConfig::Compressed(sasr as u32)).unwrap();
 
@@ -43,10 +43,10 @@ fn assert_accurate_fm_index<P: Position, B: Block>(
 
     builder.build(text, &mut blob).unwrap();
 
-    let fm_index = FmIndex::<P, B>::load(&blob).unwrap();
+    let fm_index = FmIndex::<P, B, EncodingTable>::load(&blob).unwrap();
 
     patterns.iter().zip(answers.iter()).for_each(|(pattern, answer)| {
-        let mut result: Vec<u64> = fm_index.locate_pattern(pattern).into_iter().map(|x| x.as_u64()).collect();
+        let mut result: Vec<u64> = fm_index.locate(pattern).into_iter().map(|x| x.as_u64()).collect();
         result.sort();
         assert_eq!(&result, answer);
     });

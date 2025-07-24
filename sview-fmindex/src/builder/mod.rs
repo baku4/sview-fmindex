@@ -6,7 +6,7 @@ use crate::{
     components::{
         Header, View,
         // headers
-        MagicNumber, EncodingTable, CountArrayHeader, SuffixArrayHeader, BwmHeader,
+        MagicNumber, TextEncoder, CountArrayHeader, SuffixArrayHeader, BwmHeader,
         // views
         CountArrayView, SuffixArrayView, BwmView,
     },
@@ -15,12 +15,12 @@ use crate::{
 pub mod build_config;
 
 /// Builder for FM-index
-pub struct FmIndexBuilder<P: Position, B: Block> {
+pub struct FmIndexBuilder<P: Position, B: Block, E: TextEncoder> {
     // Unchangeable after init
     text_len: usize,
     symbol_count: u32,
     magic_number: MagicNumber,
-    encoding_table: EncodingTable,
+    text_encoder: E,
     // Configs
     suffix_array_config: build_config::SuffixArrayConfig,
     lookup_table_config: build_config::LookupTableConfig,
@@ -56,26 +56,25 @@ pub enum BuildError {
     InvalidConfig(String),
 }
 
-impl<P: Position, B: Block> FmIndexBuilder<P, B> {
+impl<P: Position, B: Block, E: TextEncoder> FmIndexBuilder<P, B, E> {
     // ================================================
     // Set up builder
     // ================================================
-    #[deprecated(note = "Renamed to `new` for better following Rust naming conventions")]
-    pub fn init<T: AsRef<[u8]>>(
+    // #[deprecated(note = "Renamed to `new` for better following Rust naming conventions")]
+    // pub fn init<T: AsRef<[u8]>>(
+    //     text_len: usize,
+    //     symbols: &[T],
+    // ) -> Result<Self, BuildError> {
+    //     Self::new(text_len, symbols)
+    // }
+    pub fn new(
         text_len: usize,
-        symbols: &[T],
-    ) -> Result<Self, BuildError> {
-        Self::new(text_len, symbols)
-    }
-    pub fn new<T: AsRef<[u8]>>(
-        text_len: usize,
-        symbols: &[T],
+        symbol_count: u32,
+        text_encoder: E,
     ) -> Result<Self, BuildError> {
         let suffix_array_config = build_config::SuffixArrayConfig::default();
         let lookup_table_config = build_config::LookupTableConfig::default();
 
-        let symbol_count = symbols.len() as u32;
-        let encoding_table = EncodingTable::new(symbols);
         if symbol_count > B::MAX_SYMBOL {
             return Err(BuildError::SymbolCountOver(B::MAX_SYMBOL, symbol_count));
         }
@@ -93,7 +92,7 @@ impl<P: Position, B: Block> FmIndexBuilder<P, B> {
             text_len,
             symbol_count,
             magic_number: MagicNumber::new(),
-            encoding_table,
+            text_encoder,
             // Configs
             lookup_table_config,
             suffix_array_config,
@@ -176,7 +175,7 @@ impl<P: Position, B: Block> FmIndexBuilder<P, B> {
     // Header size in bytes
     fn header_size(&self) -> usize {
         self.magic_number.aligned_size::<B>()
-        + self.encoding_table.aligned_size::<B>()
+        + self.text_encoder.aligned_size::<B>()
         + self.count_array_header.aligned_size::<B>()
         + self.suffix_array_header.aligned_size::<B>()
         + self.bwm_header.aligned_size::<B>()
@@ -223,8 +222,8 @@ impl<P: Position, B: Block> FmIndexBuilder<P, B> {
         self.magic_number.write_to_blob(&mut blob[header_start_index..header_end_index]);
         // Encoding table
         header_start_index = header_end_index;
-        header_end_index += self.encoding_table.aligned_size::<B>();
-        self.encoding_table.write_to_blob(&mut blob[header_start_index..header_end_index]);
+        header_end_index += self.text_encoder.aligned_size::<B>();
+        self.text_encoder.write_to_blob(&mut blob[header_start_index..header_end_index]);
         // Count array header
         header_start_index = header_end_index;
         header_end_index += self.count_array_header.aligned_size::<B>();
@@ -244,9 +243,9 @@ impl<P: Position, B: Block> FmIndexBuilder<P, B> {
         // Count array
         //  - encode text with encoding table
         //  - during encoding, count the number of each character & kmer
-        self.count_array_header.count_and_encode_text::<P, B>(
+        self.count_array_header.count_and_encode_text::<P, B, E>(
             &mut text,
-            &self.encoding_table,
+            &self.text_encoder,
             &mut blob[body_start_index..body_end_index],
         );
         // Suffix array
