@@ -24,7 +24,7 @@ fn assert_config_invariance<P: Position, B: Block>(
         return;
     }
     
-    let builder = FmIndexBuilder::<P, B>::init(text.len(), symbols).unwrap()
+    let builder = FmIndexBuilder::<P, B>::new(text.len(), symbols).unwrap()
         .set_lookup_table_config(lt_config).unwrap()
         .set_suffix_array_config(sa_config).unwrap();
 
@@ -73,7 +73,7 @@ fn test_config_invariance() {
             let pattern = gen_rand_pattern(&text, 10, 10);
         
             // Get Answer using default configuration
-            let base_builder = FmIndexBuilder::<u32, Block4<u32>>::init(text.len(), &symbols).unwrap();
+            let base_builder = FmIndexBuilder::<u32, Block4<u32>>::new(text.len(), &symbols).unwrap();
             let blob_size = base_builder.blob_size();
             let mut blob: Vec<u8> = vec![0; blob_size];
             base_builder.build(text.clone(), &mut blob).unwrap();

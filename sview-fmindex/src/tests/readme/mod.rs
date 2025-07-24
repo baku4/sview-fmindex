@@ -18,7 +18,7 @@ let symbols: &[&[u8]] = &[
 
 // (2) Build index
 let text = b"CTCCGTACACCTGTTTCGTATCGGAXXYYZZ".to_vec();
-let builder = FmIndexBuilder::<u32, Block2<u64>>::init(text.len(), symbols).unwrap();
+let builder = FmIndexBuilder::<u32, Block2<u64>>::new(text.len(), symbols).unwrap();
 // You have to prepare a blob to build the index.
 let blob_size = builder.blob_size();
 let mut blob = vec![0; blob_size];

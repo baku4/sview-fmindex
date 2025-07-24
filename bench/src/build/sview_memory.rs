@@ -45,7 +45,7 @@ pub fn build_index(
     // T를 와일드카드로 취급하면 Block2, 아니면 Block3 사용
     if treat_t_as_wildcard {
         // Block2 사용 (ACG만 인덱싱)
-        let builder = FmIndexBuilder::<u32, Block2<u64>>::init(
+        let builder = FmIndexBuilder::<u32, Block2<u64>>::new(
             text.len(),
             &symbols,
         )?
@@ -71,7 +71,7 @@ pub fn build_index(
         println!("Index saved to: {}", output_path.display());
     } else {
         // Block3 사용 (ACGT 모두 인덱싱)
-        let builder = FmIndexBuilder::<u32, Block3<u64>>::init(
+        let builder = FmIndexBuilder::<u32, Block3<u64>>::new(
             text.len(),
             &symbols,
         )?

@@ -26,7 +26,7 @@ fn assert_locate_consistency<P: Position, B: Block>(
     }
     let characters_by_index = chr_list.chunks(1).map(|c| c).collect::<Vec<_>>();
     
-    let builder = FmIndexBuilder::<P, B>::init(text.len(), &characters_by_index).unwrap()
+    let builder = FmIndexBuilder::<P, B>::new(text.len(), &characters_by_index).unwrap()
         .set_lookup_table_config(LookupTableConfig::KmerSize(ltks)).unwrap()
         .set_suffix_array_config(SuffixArrayConfig::Compressed(sasr)).unwrap();
 

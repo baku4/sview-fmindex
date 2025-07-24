@@ -60,7 +60,14 @@ impl<P: Position, B: Block> FmIndexBuilder<P, B> {
     // ================================================
     // Set up builder
     // ================================================
+    #[deprecated(note = "Renamed to `new` for better following Rust naming conventions")]
     pub fn init<T: AsRef<[u8]>>(
+        text_len: usize,
+        symbols: &[T],
+    ) -> Result<Self, BuildError> {
+        Self::new(text_len, symbols)
+    }
+    pub fn new<T: AsRef<[u8]>>(
         text_len: usize,
         symbols: &[T],
     ) -> Result<Self, BuildError> {

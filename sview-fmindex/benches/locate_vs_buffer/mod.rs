@@ -65,7 +65,7 @@ pub fn compare_locate_vs_buffer(c: &mut Criterion) {
                     {
                         let tag = format!("{}_ss{}_lk{}", $tagprefix, ss, lk);
                         let start = Instant::now();
-                        let builder = FmIndexBuilder::<$pos, $blk>::init(text.len(), &characters_by_index).unwrap()
+                        let builder = FmIndexBuilder::<$pos, $blk>::new(text.len(), &characters_by_index).unwrap()
                             .set_suffix_array_config(SuffixArrayConfig::Compressed(ss)).unwrap()
                             .set_lookup_table_config(LookupTableConfig::KmerSize(lk)).unwrap();
                         let blob_size = builder.blob_size();
