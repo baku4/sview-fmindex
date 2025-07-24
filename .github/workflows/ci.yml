@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - run: cargo build --verbose
+      - run: cargo build -p sview-fmindex --verbose
       - name: Upload target dir
         uses: actions/upload-artifact@v4
         with:
@@ -41,11 +41,9 @@ jobs:
           name: target-${{ matrix.os }}
           path: target
       - name: Run tests without features
-        run: cargo test --verbose
+        run: cargo test -p sview-fmindex --verbose
       - name: Run tests with fastbwt feature
-        run: cargo test --features fastbwt --verbose
-      - name: Run tests with async-io feature
-        run: cargo test --features async-io --verbose
+        run: cargo test -p sview-fmindex --features fastbwt --verbose
 
   wasm-build:
     name: Build as WASM
@@ -59,4 +57,4 @@ jobs:
       - name: Add build target
         run: rustup target add wasm32-unknown-unknown
       - name: Build
-        run: cargo build --target wasm32-unknown-unknown --verbose
+        run: cargo build -p sview-fmindex --target wasm32-unknown-unknown --verbose

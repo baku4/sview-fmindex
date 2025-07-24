@@ -61,7 +61,13 @@ fn assert_accurate_fm_index<P: Position, B: Block>(
 fn results_are_accurate() {
     let wide_test = std::env::var("WIDE_TEST").is_ok();
 
-    let range_chr_count = if wide_test { 2..63 } else { 2..8 };
+    let range_chr_count = if wide_test {
+        (2..63).collect::<Vec<_>>()
+    } else {vec![
+        3, 4, 5,
+        7, 8, 9,
+        15, 16, 17,
+    ]};
     let text_min_len = if wide_test { 500 } else { 100 };
     let text_max_len = if wide_test { 1000 } else { 300 };
     let n_text = if wide_test { 10 } else { 2 };
