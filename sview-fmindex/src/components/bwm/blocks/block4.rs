@@ -12,28 +12,28 @@ impl<V: Vector> Aligned for Block4<V> {
 
 impl<V: Vector> Block for Block4<V> {
     const BLOCK_LEN: u32 = V::BLOCK_LEN;
-    const MAX_SYMBOL: u32 = 15;
+    const MAX_SYMBOL: u32 = 16;
 
     #[inline]
-    fn vectorize<P: Position>(text_chunk: &[u8], rank_pre_counts: &mut Vec<P>) -> Self {
+    fn vectorize<P: Position>(text_chunk: &[u8], rank_pre_counts: &mut [P]) -> Self {
         let mut bwt_vectors = [V::ZERO; 4];
-        text_chunk.iter().for_each(|chridxwp| {
-            let chridx = chridxwp - 1;
-            rank_pre_counts[chridx as usize] += P::ONE;
+        text_chunk.iter().for_each(|symidx_with_sentinel| {
+            let symidx = symidx_with_sentinel - 1; // sentinel's idx is 0
+            rank_pre_counts[symidx as usize] += P::ONE;
             bwt_vectors[0] <<= V::ONE;
-            if chridx & 0b0001 != 0 {
+            if symidx & 0b0001 != 0 {
                 bwt_vectors[0] += V::ONE;
             }
             bwt_vectors[1] <<= V::ONE;
-            if chridx & 0b0010 != 0 {
+            if symidx & 0b0010 != 0 {
                 bwt_vectors[1] += V::ONE;
             }
             bwt_vectors[2] <<= V::ONE;
-            if chridx & 0b0100 != 0 {
+            if symidx & 0b0100 != 0 {
                 bwt_vectors[2] += V::ONE;
             }
             bwt_vectors[3] <<= V::ONE;
-            if chridx & 0b1000 != 0 {
+            if symidx & 0b1000 != 0 {
                 bwt_vectors[3] += V::ONE;
             }
         });
@@ -43,8 +43,8 @@ impl<V: Vector> Block for Block4<V> {
         self.0.iter_mut().for_each(|bits| *bits <<= offset);
     }
     #[inline]
-    fn get_remain_count_of(&self, rem: u32, chridx: u8) -> u32 {
-        let mut count_bits = match chridx {
+    fn get_remain_count_of(&self, rem: u32, symidx: u8) -> u32 {
+        let mut count_bits = match symidx {
             0 => !self.0[3] & !self.0[2] & !self.0[1] & !self.0[0], // 0000
             1 => !self.0[3] & !self.0[2] & !self.0[1] & self.0[0],  // 0001
             2 => !self.0[3] & !self.0[2] & self.0[1] & !self.0[0],  // 0010

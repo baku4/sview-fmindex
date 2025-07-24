@@ -24,16 +24,16 @@ fn assert_text_encoders_consistency<P: Position, B: Block>(
     ltks: u32,
     sasr: u32,
 ) {
-    if B::MAX_SYMBOL < chr_list.len() as u32 {
+    let characters_by_index = chr_list.chunks(1).map(|c| c).collect::<Vec<_>>();
+    let symbol_count = characters_by_index.len() as u32;
+    if B::MAX_SYMBOL < symbol_count {
         println!("          pass");
         return;
     }
-    let characters_by_index = chr_list.chunks(1).map(|c| c).collect::<Vec<_>>();
-    let symbol_count = characters_by_index.len() as u32;
 
     // Prepare text and encoders
     let text_for_encoding_table = text.clone();
-    let encoding_table = EncodingTable::new(&characters_by_index);
+    let encoding_table = EncodingTable::from_symbols(&characters_by_index);
 
     let text_for_pass_through = text.into_iter().map(|c| encoding_table.idx_of(c)).collect::<Vec<_>>();
     let pass_through = PassThrough;
@@ -71,7 +71,7 @@ fn assert_text_encoders_consistency<P: Position, B: Block>(
     let pt_fm_index = FmIndex::<P, B, PassThrough>::load(&pt_blob).unwrap();
 
     // Test methods
-    let encoding_table = EncodingTable::new(&characters_by_index);
+    let encoding_table = EncodingTable::from_symbols(&characters_by_index);
     patterns.iter().for_each(|pattern| {
         // Test count methods
         let et_count = et_fm_index.count(pattern);

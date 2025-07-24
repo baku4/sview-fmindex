@@ -12,19 +12,28 @@ impl TextEncoder for EncodingTable {
 }
 
 impl EncodingTable {
+    /// Treat the last symbol as wild card.
     #[inline]
-    pub fn new<T>(symbols: &[T]) -> Self where
-        T: AsRef<[u8]>,
-    {
+    pub fn from_symbols<T: AsRef<[u8]>>(symbols: &[T]) -> Self {
         let symbol_count = symbols.len() as u32;
-        let mut table = [symbol_count as u8; 256]; // wild card's index is symbol_count
+        let mut table = [(symbol_count - 1) as u8; 256]; // wild card's index is symbol_count
+        symbols.iter().enumerate().for_each(|(idx, sym)| {
+            sym.as_ref().iter().for_each(|x| table[*x as usize] = idx as u8);
+        });
+        Self(table)
+    }
+    /// Add one additional wildcard
+    #[inline]
+    pub fn from_symbols_with_wildcard<T: AsRef<[u8]>>(symbols: &[T]) -> Self {
+        let symbol_count = symbols.len() as u32 + 1;
+        let mut table = [(symbol_count - 1) as u8; 256]; // wild card's index is symbol_count
         symbols.iter().enumerate().for_each(|(idx, sym)| {
             sym.as_ref().iter().for_each(|x| table[*x as usize] = idx as u8);
         });
         Self(table)
     }
     pub fn symbol_count(&self) -> u32 {
-        *self.0.iter().max().unwrap() as u32
+        *self.0.iter().max().unwrap() as u32 + 1
     }
 }
 

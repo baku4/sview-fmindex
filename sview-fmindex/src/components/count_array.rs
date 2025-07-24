@@ -60,12 +60,12 @@ impl CountArrayHeader {
         lookup_table_kmer_size: u32,
     ) -> Self {
         // Total number of symbols in burrow-wheeler transformed text:
-        // symbol_count + 1 (wildcard) + 1 (sentinel)
-        let total_symbol_count_in_bwt = symbol_count + 2;
+        // symbol_count + 1 (sentinel)
+        let symbol_with_sentinel_count = symbol_count + 1;
 
-        let count_array_len = total_symbol_count_in_bwt;
+        let count_array_len = symbol_with_sentinel_count;
         let kmer_multiplier_len = lookup_table_kmer_size;
-        let kmer_count_table_len = (total_symbol_count_in_bwt).pow(lookup_table_kmer_size) as u64;
+        let kmer_count_table_len = (symbol_with_sentinel_count).pow(lookup_table_kmer_size) as u64;
         
         Self {
             symbol_count,
@@ -82,17 +82,17 @@ impl CountArrayHeader {
         blob: &mut [u8],
     ) {
         // 1) Init
-        let total_symbol_count_in_bwt = self.count_array_len as usize;
+        let symbol_with_sentinel_count = self.count_array_len as usize;
         //  - count array
         let mut count_array = vec![P::ZERO; self.count_array_len as usize];
         //  - kmer multiplier (+ 빠른 위치 검색을 위한 sym 인덱스 계산)
         let kmer_multiplier: Vec<usize> = {
             (0..self.lookup_table_kmer_size).map(|pos| {
-                (total_symbol_count_in_bwt).pow(pos)
+                (symbol_with_sentinel_count).pow(pos)
             }).rev().collect()
         };
         let index_for_each_symbol: Vec<usize> = {
-            (0..(self.symbol_count + 1) as usize).map(|symidx| { // Including wild card (symbol_count + 1)
+            (0..(self.symbol_count) as usize).map(|symidx| {
                 kmer_multiplier[0] * (symidx + 1)
             }).collect()
         };
@@ -116,7 +116,7 @@ impl CountArrayHeader {
             // Add count to counts
             count_array[symidx as usize + 1] += P::ONE;
             // Update table_index for kmer_count_array
-            table_index /= total_symbol_count_in_bwt;
+            table_index /= symbol_with_sentinel_count;
             table_index += index_for_each_symbol[symidx as usize];
             // Add count to lookup table
             kmer_count_array[table_index] += P::ONE;

@@ -8,7 +8,7 @@ pub mod blocks;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BwmHeader {
     // Given
-    pub symbol_with_sentinel_count: u32,
+    pub symbol_count: u32,
     _padding: u32,
     // Derivatives
     pub rank_checkpoints_len: u64,
@@ -33,7 +33,7 @@ pub trait Block: zerocopy::FromBytes + zerocopy::IntoBytes + zerocopy::Immutable
     const MAX_SYMBOL: u32; // Maximum symbol count that can be indexed by the block
 
     // Build
-    fn vectorize<P: Position>(bwt_text: &[u8], rank_pre_counts: &mut Vec<P>) -> Self;
+    fn vectorize<P: Position>(bwt_text: &[u8], rank_pre_counts: &mut [P]) -> Self;
     fn shift_last_offset(&mut self, offset: u32);
     // Locate
     fn get_remain_count_of(&self, rem: u32, chridx: u8) -> u32;
@@ -70,18 +70,18 @@ impl BwmHeader {
     #[inline]
     pub fn new<P: Position, B: Block>(
         text_len: u64,
-        symbol_with_sentinel_count: u32, // symbol_count + 1 (sentinel)
+        symbol_count: u32,
     ) -> Self {
         let block_len = B::BLOCK_LEN;
 
         // Add one more block always for save rank checkpoints
         let block_count = (text_len / block_len as u64) + 1;
 
-        let rank_checkpoints_len = (block_count as u64) * (symbol_with_sentinel_count as u64);
+        let rank_checkpoints_len = block_count * (symbol_count as u64);
         let blocks_len = block_count as u64;
 
         Self {
-            symbol_with_sentinel_count,
+            symbol_count,
             _padding: 0,
             rank_checkpoints_len,
             blocks_len,
@@ -120,14 +120,14 @@ impl BwmHeader {
             (left, right)
         };
 
-        let mut rank_pre_counts = vec![P::ZERO; self.symbol_with_sentinel_count as usize];
+        let mut rank_pre_counts = vec![P::ZERO; self.symbol_count as usize];
         let mut rank_checkpoints_start_index = 0;
 
         bwt_text.chunks(B::BLOCK_LEN as usize).enumerate().for_each(|(block_idx, text_chunk)| {
             rank_checkpoints_blob[
-                rank_checkpoints_start_index..rank_checkpoints_start_index+(self.symbol_with_sentinel_count as usize)
+                rank_checkpoints_start_index..rank_checkpoints_start_index+(self.symbol_count as usize)
             ].copy_from_slice(&rank_pre_counts);
-            rank_checkpoints_start_index += self.symbol_with_sentinel_count as usize;
+            rank_checkpoints_start_index += self.symbol_count as usize;
 
             let block = B::vectorize(text_chunk, &mut rank_pre_counts);
             blocks_blob[block_idx] = block;
@@ -155,7 +155,7 @@ impl<'a, P: Position, B: Block> View<'a> for BwmView<'a, P, B> {
         + header.blocks_aligned_size::<B, A>()
     }
     fn load_from_body<A: Aligned>(header: &Self::Header, body_blob: &'a [u8]) -> Self {
-        let symbol_with_sentinel_count = P::from_u32(header.symbol_with_sentinel_count);
+        let symbol_with_sentinel_count = P::from_u32(header.symbol_count);
 
         // Sentinel index
         let mut body_start_index = 0;

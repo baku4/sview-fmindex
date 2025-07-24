@@ -19,7 +19,6 @@ use crate::tests::{
 // *** For extensive and thorough testing ***
 // To enable "WIDE_TEST",
 // set the environment variable WIDE_TEST=1
-
 fn assert_accurate_fm_index<P: Position, B: Block>(
     chr_list: &Vec<u8>,
     text: Vec<u8>,
@@ -33,8 +32,14 @@ fn assert_accurate_fm_index<P: Position, B: Block>(
         return;
     }
     let characters_by_index = chr_list.chunks(1).map(|c| c).collect::<Vec<_>>();
+    let encoding_table = EncodingTable::from_symbols(&characters_by_index);
+    let symbol_count = encoding_table.symbol_count();
     
-    let builder = FmIndexBuilder::<P, B, EncodingTable>::new(text.len(), characters_by_index.len() as u32, EncodingTable::new(&characters_by_index)).unwrap()
+    let builder = FmIndexBuilder::<P, B, EncodingTable>::new(
+        text.len(),
+        symbol_count,
+        encoding_table,
+    ).unwrap()
         .set_lookup_table_config(LookupTableConfig::KmerSize(ltks as u32)).unwrap()
         .set_suffix_array_config(SuffixArrayConfig::Compressed(sasr as u32)).unwrap();
 
@@ -53,10 +58,10 @@ fn assert_accurate_fm_index<P: Position, B: Block>(
 }
 
 #[test]
-fn result_is_accurate_for_new_algorithm() {
+fn results_are_accurate() {
     let wide_test = std::env::var("WIDE_TEST").is_ok();
 
-    let range_chr_count = if wide_test { 2..63 } else { 2..4 };
+    let range_chr_count = if wide_test { 2..63 } else { 2..8 };
     let text_min_len = if wide_test { 500 } else { 100 };
     let text_max_len = if wide_test { 1000 } else { 300 };
     let n_text = if wide_test { 10 } else { 2 };

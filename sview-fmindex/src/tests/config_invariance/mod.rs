@@ -24,7 +24,14 @@ fn assert_config_invariance<P: Position, B: Block>(
         return;
     }
     
-    let builder = FmIndexBuilder::<P, B, EncodingTable>::new(text.len(), symbols.len() as u32, EncodingTable::new(symbols)).unwrap()
+    let encoding_table = EncodingTable::from_symbols(symbols);
+    let symbol_count = encoding_table.symbol_count();
+    
+    let builder = FmIndexBuilder::<P, B, EncodingTable>::new(
+        text.len(),
+        symbol_count,
+        encoding_table,
+    ).unwrap()
         .set_lookup_table_config(lt_config).unwrap()
         .set_suffix_array_config(sa_config).unwrap();
 
@@ -73,7 +80,7 @@ fn test_config_invariance() {
             let pattern = gen_rand_pattern(&text, 10, 10);
         
             // Get Answer using default configuration
-            let base_builder = FmIndexBuilder::<u32, Block4<u32>, EncodingTable>::new(text.len(), symbols.len() as u32, EncodingTable::new(&symbols)).unwrap();
+            let base_builder = FmIndexBuilder::<u32, Block4<u32>, EncodingTable>::new(text.len(), symbols.len() as u32, EncodingTable::from_symbols(&symbols)).unwrap();
             let blob_size = base_builder.blob_size();
             let mut blob: Vec<u8> = vec![0; blob_size];
             base_builder.build(text.clone(), &mut blob).unwrap();

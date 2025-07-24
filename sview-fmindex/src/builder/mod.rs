@@ -60,13 +60,6 @@ impl<P: Position, B: Block, E: TextEncoder> FmIndexBuilder<P, B, E> {
     // ================================================
     // Set up builder
     // ================================================
-    // #[deprecated(note = "Renamed to `new` for better following Rust naming conventions")]
-    // pub fn init<T: AsRef<[u8]>>(
-    //     text_len: usize,
-    //     symbols: &[T],
-    // ) -> Result<Self, BuildError> {
-    //     Self::new(text_len, symbols)
-    // }
     pub fn new(
         text_len: usize,
         symbol_count: u32,
@@ -123,7 +116,7 @@ impl<P: Position, B: Block, E: TextEncoder> FmIndexBuilder<P, B, E> {
         );
         let bwm_header = BwmHeader::new::<P, B>(
             text_len as u64,
-            symbol_count + 1,
+            symbol_count,
         );
 
         Ok((

@@ -3,7 +3,7 @@ Implementation of blocks of trait [Block].
 
 The suffix of the struct name is the count of inner vectors.
 Using less vector makes the algorithms faster.
-But the maximum count of the index is restrict to the $2^{v}-1$ ($v$ the vector count.)
+But the maximum count of the index is restrict to the $2^{v}$ ($v$ the vector count.)
 
 [Block] uses [Vector] as inner vectors.
 Currently, [Vector] is implemented for: u32, u64, u128.
