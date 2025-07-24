@@ -1,8 +1,12 @@
+// Assert that the text encoders are consistent
+//  - EncodingTable
+//  - PassThrough
+
 use crate::{
     FmIndex, FmIndexBuilder, TextEncoder, Position,
     build_config::{LookupTableConfig, SuffixArrayConfig},
     Block, blocks::{Block2, Block3, Block4, Block5, Block6},
-    text_encoders::EncodingTable,
+    text_encoders::{EncodingTable, PassThrough},
 };
 use crate::tests::{
     random_data::{
@@ -12,8 +16,8 @@ use crate::tests::{
     },
 };
 
-// *** For testing locate method consistency ***
-fn assert_locate_consistency<P: Position, B: Block>(
+// *** For testing text encoders consistency ***
+fn assert_text_encoders_consistency<P: Position, B: Block>(
     chr_list: &Vec<u8>,
     text: Vec<u8>,
     patterns: &Vec<Vec<u8>>,
@@ -25,58 +29,86 @@ fn assert_locate_consistency<P: Position, B: Block>(
         return;
     }
     let characters_by_index = chr_list.chunks(1).map(|c| c).collect::<Vec<_>>();
+    let symbol_count = characters_by_index.len() as u32;
+
+    // Prepare text and encoders
+    let text_for_encoding_table = text.clone();
+    let encoding_table = EncodingTable::new(&characters_by_index);
+
+    let text_for_pass_through = text.into_iter().map(|c| encoding_table.idx_of(c)).collect::<Vec<_>>();
+    let pass_through = PassThrough;
     
-    let builder = FmIndexBuilder::<P, B, EncodingTable>::new(text.len(), characters_by_index.len() as u32, EncodingTable::new(&characters_by_index)).unwrap()
+    // Build with Encoding Table
+    let et_builder = FmIndexBuilder::<P, B, EncodingTable>::new(
+        text_for_encoding_table.len(),
+        symbol_count,
+        encoding_table,
+    ).unwrap()
         .set_lookup_table_config(LookupTableConfig::KmerSize(ltks)).unwrap()
         .set_suffix_array_config(SuffixArrayConfig::Compressed(sasr)).unwrap();
 
-    let blob_size = builder.blob_size();
-    let mut blob: Vec<u8> = vec![0; blob_size];
+    let et_blob_size = et_builder.blob_size();
+    let mut et_blob: Vec<u8> = vec![0; et_blob_size];
 
-    builder.build(text.clone(), &mut blob).unwrap();
+    et_builder.build(text_for_encoding_table, &mut et_blob).unwrap();
 
-    let fm_index = FmIndex::<P, B, EncodingTable>::load(&blob).unwrap();
+    let et_fm_index = FmIndex::<P, B, EncodingTable>::load(&et_blob).unwrap();
 
-    // Create encoding table for converting text to indices
+    // Build with Pass Through
+    let pt_builder = FmIndexBuilder::<P, B, PassThrough>::new(
+        text_for_pass_through.len(),
+        symbol_count,
+        pass_through,
+    ).unwrap()
+        .set_lookup_table_config(LookupTableConfig::KmerSize(ltks)).unwrap()
+        .set_suffix_array_config(SuffixArrayConfig::Compressed(sasr)).unwrap();
+
+    let pt_blob_size = pt_builder.blob_size();
+    let mut pt_blob: Vec<u8> = vec![0; pt_blob_size];
+
+    pt_builder.build(text_for_pass_through, &mut pt_blob).unwrap();
+
+    let pt_fm_index = FmIndex::<P, B, PassThrough>::load(&pt_blob).unwrap();
+
+    // Test methods
     let encoding_table = EncodingTable::new(&characters_by_index);
-
     patterns.iter().for_each(|pattern| {
         // Test count methods
-        let count_text = fm_index.count(pattern);
-        let count_text_rev_iter = fm_index.count_rev_iter(pattern.iter().rev().cloned());
+        let et_count = et_fm_index.count(pattern);
+        let et_count_rev_iter = et_fm_index.count_rev_iter(pattern.iter().rev().cloned());
         
         // Convert pattern to indices
         let pattern_indices: Vec<u8> = pattern.iter().map(|&c| encoding_table.idx_of(c)).collect();
-        let count_indices = fm_index.count_indices(&pattern_indices);
-        let count_indices_rev_iter = fm_index.count_indices_rev_iter(pattern_indices.iter().rev().cloned());
+        let pt_count = pt_fm_index.count(&pattern_indices);
+        let pt_count_rev_iter = pt_fm_index.count_rev_iter(pattern_indices.iter().rev().cloned());
         
         // Assert all count methods return the same result
-        assert_eq!(count_text, count_text_rev_iter, "Count methods should return same result for pattern: {:?}", pattern);
-        assert_eq!(count_text, count_indices, "Count methods should return same result for pattern: {:?}", pattern);
-        assert_eq!(count_text, count_indices_rev_iter, "Count methods should return same result for pattern: {:?}", pattern);
+        assert_eq!(et_count, et_count_rev_iter, "Count methods should return same result for pattern: {:?}", pattern);
+        assert_eq!(et_count, pt_count, "Count methods should return same result for pattern: {:?}", pattern);
+        assert_eq!(et_count, pt_count_rev_iter, "Count methods should return same result for pattern: {:?}", pattern);
 
         // Test locate methods
-        let mut locate_text = fm_index.locate_pattern(pattern);
-        locate_text.sort();
+        let mut et_locate = et_fm_index.locate(pattern);
+        et_locate.sort();
         
-        let mut locate_text_rev_iter = fm_index.locate_pattern_rev_iter(pattern.iter().rev().cloned());
-        locate_text_rev_iter.sort();
+        let mut et_locate_rev_iter = et_fm_index.locate_rev_iter(pattern.iter().rev().cloned());
+        et_locate_rev_iter.sort();
         
-        let mut locate_indices = fm_index.locate_indices(&pattern_indices);
-        locate_indices.sort();
+        let mut pt_locate = pt_fm_index.locate(&pattern_indices);
+        pt_locate.sort();
         
-        let mut locate_indices_rev_iter = fm_index.locate_indices_rev_iter(pattern_indices.iter().rev().cloned());
-        locate_indices_rev_iter.sort();
+        let mut pt_locate_rev_iter = pt_fm_index.locate_rev_iter(pattern_indices.iter().rev().cloned());
+        pt_locate_rev_iter.sort();
         
         // Assert all locate methods return the same result
-        assert_eq!(locate_text, locate_text_rev_iter, "Locate methods should return same result for pattern: {:?}", pattern);
-        assert_eq!(locate_text, locate_indices, "Locate methods should return same result for pattern: {:?}", pattern);
-        assert_eq!(locate_text, locate_indices_rev_iter, "Locate methods should return same result for pattern: {:?}", pattern);
+        assert_eq!(et_locate, et_locate_rev_iter, "Locate methods should return same result for pattern: {:?}", pattern);
+        assert_eq!(et_locate, pt_locate, "Locate methods should return same result for pattern: {:?}", pattern);
+        assert_eq!(et_locate, pt_locate_rev_iter, "Locate methods should return same result for pattern: {:?}", pattern);
     });
 }
 
 #[test]
-fn locate_methods_are_consistent() {
+fn text_encoders_are_consistent() {
     let range_chr_count = 2..4;
     let text_min_len = 100;
     let text_max_len = 300;
@@ -100,7 +132,7 @@ fn locate_methods_are_consistent() {
 
             macro_rules! test_type_of {
                 ( $p: ty, $b: ident, $v: ty ) => {
-                    assert_locate_consistency::<$p, $b::<$v>>(
+                    assert_text_encoders_consistency::<$p, $b::<$v>>(
                         &chr_list,
                         text.clone(),
                         &patterns,

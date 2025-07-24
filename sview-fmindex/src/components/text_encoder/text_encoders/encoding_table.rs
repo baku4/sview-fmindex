@@ -23,6 +23,9 @@ impl EncodingTable {
         });
         Self(table)
     }
+    pub fn symbol_count(&self) -> u32 {
+        *self.0.iter().max().unwrap() as u32
+    }
 }
 
 impl Header for EncodingTable {}

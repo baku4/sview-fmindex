@@ -74,7 +74,6 @@ impl CountArrayHeader {
             kmer_multiplier_len,
             kmer_count_table_len,
         }
-
     }
     pub fn count_and_encode_text<P: Position, A: Aligned, E: TextEncoder>(
         &self,
@@ -200,8 +199,6 @@ impl<'a, P: Position> CountArrayView<'a, P> {
         self.count_array[symidx]
     }
     
-    // ================================================
-    // For plain text
     //  - using pattern
     pub fn get_initial_pos_range_and_idx_of_pattern<E: TextEncoder>(
         &self,
@@ -248,77 +245,6 @@ impl<'a, P: Position> CountArrayView<'a, P> {
                 Some(sym) => {
                     sliced_pattern_size += 1;
                     start_idx += (text_encoder.idx_of(sym) + 1) as usize * self.kmer_multiplier[
-                        self.kmer_multiplier.len() - sliced_pattern_size as usize
-                    ];
-                },
-                None => {
-                    // The pattern length can be smaller than the k-mer size.
-                    // Multiply by chr_with_pidx_count.pow(self.kmer_size - sliced_pattern_size).
-                    // Here, chr_with_pidx_count = self.count_table.len().
-                    start_idx *= self.count_array.len().pow((self.lookup_table_kmer_size - sliced_pattern_size) as u32);
-
-                    let gap_btw_unsearched_kmer = self.kmer_multiplier[sliced_pattern_size as usize - 1] - 1;
-                    let end_idx = start_idx + gap_btw_unsearched_kmer;
-
-                    let pos_range = (
-                        self.kmer_count_table[start_idx -1],
-                        self.kmer_count_table[end_idx],
-                    );
-                    return pos_range
-                },
-            };
-        }
-
-        let pos_range = (
-            self.kmer_count_table[start_idx -1],
-            self.kmer_count_table[start_idx],
-        );
-        pos_range
-    }
-
-    // ================================================
-    // For symbol indices
-    pub fn get_initial_pos_range_and_idx_of_indices(
-        &self,
-        indices: &[u8],
-    ) -> ((P, P), usize) {
-        let pattern_len = indices.len();
-        if pattern_len < self.lookup_table_kmer_size {
-            let start_idx = self.get_idx_of_kmer_count_table_of_indices(indices,);
-            let gap_btw_unsearched_kmer = self.kmer_multiplier[pattern_len - 1] - 1;
-            let end_idx = start_idx + gap_btw_unsearched_kmer;
-
-            let pos_range = (self.kmer_count_table[start_idx -1], self.kmer_count_table[end_idx]);
-            (pos_range, 0)
-        } else {
-            let sliced_indices = &indices[indices.len() - self.lookup_table_kmer_size ..];
-            let start_idx = self.get_idx_of_kmer_count_table_of_indices(sliced_indices);
-
-            let pos_range = (self.kmer_count_table[start_idx -1], self.kmer_count_table[start_idx]);
-            (pos_range, pattern_len - self.lookup_table_kmer_size)
-        }
-    }
-    fn get_idx_of_kmer_count_table_of_indices(
-        &self,
-        sliced_indices: &[u8],
-    ) -> usize {
-        sliced_indices.iter().zip(self.kmer_multiplier.iter())
-            .map(|(&idx, &mul_of_pos)| {
-                (idx + 1) as usize * mul_of_pos
-            }).sum()
-    }
-    pub fn get_initial_pos_range_and_idx_of_indices_rev_iter<I: Iterator<Item = u8>>(
-        &self,
-        indices_rev_iter: &mut I,
-    ) -> (P, P) {
-        let mut sliced_pattern_size = 0;
-        let mut start_idx= 0;
-
-        while sliced_pattern_size < self.lookup_table_kmer_size {
-            match indices_rev_iter.next() {
-                Some(idx) => {
-                    sliced_pattern_size += 1;
-                    start_idx += (idx + 1) as usize * self.kmer_multiplier[
                         self.kmer_multiplier.len() - sliced_pattern_size as usize
                     ];
                 },

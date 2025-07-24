@@ -1,11 +1,7 @@
 use super::{FmIndex, Position, Block, TextEncoder};
 
-mod with_text_encoder;
-
-// Plain text slice
-mod pattern;
-// Raw indices of each symbol in the pattern
-mod indices;
+mod with_slice;
+mod with_rev_iter;
 
 impl<'a, P: Position, B: Block, E: TextEncoder> FmIndex<'a, P, B, E> {
     fn get_locations(&self, pos_range: (P, P)) -> Vec<P> {
@@ -38,5 +34,13 @@ impl<'a, P: Position, B: Block, E: TextEncoder> FmIndex<'a, P, B, E> {
             let location = self.suffix_array_view.get_location_of(pos) + offset;
             locations.push(location);
         }
+    }
+    #[inline]
+    fn next_pos_range(&self, pos_range: (P, P), sym: u8) -> (P, P) {
+        let symidx = self.text_encoder.idx_of(sym);
+        let precount = self.count_array_view.get_precount(symidx as usize);
+        let start_rank = self.bwm_view.get_next_rank(pos_range.0, symidx);
+        let end_rank = self.bwm_view.get_next_rank(pos_range.1, symidx);
+        (precount + start_rank, precount + end_rank)
     }
 }
