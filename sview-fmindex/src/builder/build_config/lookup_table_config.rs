@@ -41,7 +41,7 @@ impl LookupTableConfig {
         max_memory_size: usize,
     ) -> u32 {
         let symbol_with_sentinel_count = symbol_count + 1; // +1 for sentinel
-        let mut kmer_size = 1;
+        let mut kmer_size = 2; // 1 is minimum k-mer size
 
         let size_cal_fn = |kmer_size: u32| (symbol_with_sentinel_count as usize).pow(kmer_size) * std::mem::size_of::<P>();
 
@@ -49,5 +49,29 @@ impl LookupTableConfig {
             kmer_size += 1;
         }
         kmer_size - 1
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_minimum_kmer_sise_is_one() {
+        // None
+        let config = LookupTableConfig::None;
+        assert_eq!(config.kmer_size::<u32>(1).unwrap(), 1);
+        assert_eq!(config.kmer_size::<u32>(2).unwrap(), 1);
+
+        // KmerSize
+        let config = LookupTableConfig::KmerSize(1);
+        assert!(config.kmer_size::<u32>(1).is_err());
+        let config = LookupTableConfig::KmerSize(2);
+        assert_eq!(config.kmer_size::<u32>(2).unwrap(), 2);
+        
+        // MaxMemory
+        let config = LookupTableConfig::MaxMemory(0);
+        assert_eq!(config.kmer_size::<u32>(1).unwrap(), 1);
+        assert_eq!(config.kmer_size::<u32>(2).unwrap(), 1);
     }
 }
