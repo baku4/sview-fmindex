@@ -6,6 +6,7 @@ use sview_fmindex::{
     FmIndex, FmIndexBuilder, Position, Block,
     build_config::{LookupTableConfig, SuffixArrayConfig},
     blocks::{Block2, Block3, Block4, Block5, Block6},
+    text_encoders::EncodingTable,
 };
 use super::random_data::{
     gen_rand_chr_list,
@@ -67,7 +68,8 @@ pub fn bench_memory_vs_disk_mmap_locate<P: Position, B: Block + 'static>(c: &mut
     
     // FM-index 빌드
     let characters_by_index = chr_list.chunks(1).map(|c| c).collect::<Vec<_>>();
-    let builder = FmIndexBuilder::<P, B>::new(text.len(),  &characters_by_index).unwrap()
+    let text_encoder = EncodingTable::from_symbols(&characters_by_index);
+    let builder = FmIndexBuilder::<P, B, EncodingTable>::new(text.len(), text_encoder.symbol_count(), text_encoder).unwrap()
         .set_suffix_array_config(SuffixArrayConfig::Compressed(2)).unwrap()
         .set_lookup_table_config(LookupTableConfig::KmerSize(3)).unwrap();
 
@@ -76,7 +78,7 @@ pub fn bench_memory_vs_disk_mmap_locate<P: Position, B: Block + 'static>(c: &mut
     let mut blob: Vec<u8> = vec![0; blob_size];
     builder.build(text, &mut blob).unwrap();
     
-    let fm_index_memory = FmIndex::<P, B>::load(&blob).unwrap();
+    let fm_index_memory = FmIndex::<P, B, EncodingTable>::load(&blob).unwrap();
     
     // 디스크에 저장할 임시 파일 경로 (target 디렉토리 안에 생성)
     let temp_file = format!(
@@ -97,7 +99,7 @@ pub fn bench_memory_vs_disk_mmap_locate<P: Position, B: Block + 'static>(c: &mut
     // mmap으로 파일을 메모리에 매핑
     let file = fs::File::open(&temp_file).unwrap();
     let mmap = unsafe { Mmap::map(&file).unwrap() };
-    let fm_index_mmap = FmIndex::<P, B>::load(&mmap).unwrap();
+    let fm_index_mmap = FmIndex::<P, B, EncodingTable>::load(&mmap).unwrap();
     
     // 각 패턴 길이에 대해 벤치마크 실행
     for (pattern_len, patterns) in pattern_lengths.iter().zip(patterns_by_length.iter()) {
@@ -108,7 +110,7 @@ pub fn bench_memory_vs_disk_mmap_locate<P: Position, B: Block + 'static>(c: &mut
             |b, _| {
                 b.iter(|| {
                     for pattern in patterns {
-                        black_box(fm_index_memory.locate_pattern(pattern));
+                        black_box(fm_index_memory.locate(pattern));
                     }
                 });
             }
@@ -121,7 +123,7 @@ pub fn bench_memory_vs_disk_mmap_locate<P: Position, B: Block + 'static>(c: &mut
             |b, _| {
                 b.iter(|| {
                     for pattern in patterns {
-                        black_box(fm_index_mmap.locate_pattern(pattern));
+                        black_box(fm_index_mmap.locate(pattern));
                     }
                 });
             }

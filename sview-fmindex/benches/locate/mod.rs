@@ -8,6 +8,7 @@ use sview_fmindex::{
     }, Position, Block,
     build_config::{LookupTableConfig, SuffixArrayConfig},
     FmIndexBuilder,
+    text_encoders::EncodingTable,
 };
 use super::random_data::{
     gen_rand_text,
@@ -17,11 +18,11 @@ use std::time::{Duration, Instant};
 
 #[inline]
 fn locate_multiple_patterns<P: Position, B: Block>(
-    fi: &FmIndex<P, B>,
+    fi: &FmIndex<P, B, EncodingTable>,
     patterns: &[Vec<u8>]
 ) {
     patterns.iter().for_each(|pattern| {
-        _ = fi.locate_pattern(pattern);
+        _ = fi.locate(pattern);
     });
 }
 
@@ -53,13 +54,14 @@ pub fn perf_of_locate(c: &mut Criterion) {
                     {
                         let tag = format!("{}_ss{}_lk{}", $tagprefix, ss, lk);
                         let start = Instant::now();
-                        let builder = FmIndexBuilder::<$pos, $blk>::new(text.len(), &characters_by_index).unwrap()
+                        let text_encoder = EncodingTable::from_symbols(&characters_by_index);
+                        let builder = FmIndexBuilder::<$pos, $blk, EncodingTable>::new(text.len(), text_encoder.symbol_count(), text_encoder).unwrap()
                             .set_suffix_array_config(SuffixArrayConfig::Compressed(ss)).unwrap()
                             .set_lookup_table_config(LookupTableConfig::KmerSize(lk)).unwrap();
                         let blob_size = builder.blob_size();
                         let mut blob = vec![0; blob_size];
                         builder.build(text.clone(), &mut blob).unwrap();
-                        let fi = FmIndex::<$pos, $blk>::load(&blob).unwrap();
+                        let fi = FmIndex::<$pos, $blk, EncodingTable>::load(&blob).unwrap();
                         let duration = start.elapsed();
                         println!(" - {}: built in {:?}s", tag, duration);
 

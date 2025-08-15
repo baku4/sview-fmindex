@@ -8,6 +8,7 @@ use sview_fmindex::{
     }, Position, Block,
     build_config::{LookupTableConfig, SuffixArrayConfig},
     FmIndexBuilder,
+    text_encoders::EncodingTable,
 };
 use super::random_data::{
     gen_rand_text,
@@ -15,34 +16,37 @@ use super::random_data::{
 };
 use std::time::{Duration, Instant};
 
-fn get_decoding_table<P: Position, B: Block>(fi: &FmIndex<P, B>) -> Vec<u8> {
-    let encoding_table = fi.get_encoding_table();
+fn get_decoding_table<P: Position, B: Block>(characters_by_index: &[&[u8]]) -> Vec<u8> {
+    // Create decoding table from characters_by_index
     let mut decoding_table = vec![0; 256];
-    for (i, c) in encoding_table.iter().enumerate() {
-        decoding_table[*c as usize] = i as u8;
+    for (idx, chars) in characters_by_index.iter().enumerate() {
+        for &char in chars.iter() {
+            decoding_table[char as usize] = idx as u8;
+        }
     }
     decoding_table
 }
 
 #[inline]
 fn locate_multiple_patterns<P: Position, B: Block>(
-    lfi: &FmIndex<P, B>,
+    lfi: &FmIndex<P, B, EncodingTable>,
     patterns: &[Vec<u8>]
 ) {
     patterns.iter().for_each(|pattern| {
-        _ = lfi.locate_pattern(pattern);
+        _ = lfi.locate(pattern);
     });
 }
 
 #[inline]
 fn locate_multiple_patterns_from_raw_index<P: Position, B: Block>(
-    fi: &FmIndex<P, B>,
-    patterns: &[Vec<u8>]
+    fi: &FmIndex<P, B, EncodingTable>,
+    patterns: &[Vec<u8>],
+    characters_by_index: &[&[u8]]
 ) {
+    let decoding_table = get_decoding_table::<P, B>(characters_by_index);
     patterns.iter().for_each(|pattern| {
-        let decoding_table = get_decoding_table(fi);
         let raw_index_rev_iter = pattern.iter().map(|&c| decoding_table[c as usize]).rev();
-        _ = fi.locate_pattern_rev_iter(raw_index_rev_iter);
+        _ = fi.locate_rev_iter(raw_index_rev_iter);
     });
 }
 
@@ -77,13 +81,14 @@ pub fn compare_locate_vs_locate_from_raw_index(c: &mut Criterion) {
 
                         // Build FM-index
                         let start = Instant::now();
-                        let builder = FmIndexBuilder::<$pos, $blk>::new(text.len(),  &characters_by_index).unwrap()
+                        let text_encoder = EncodingTable::from_symbols(&characters_by_index);
+                        let builder = FmIndexBuilder::<$pos, $blk, EncodingTable>::new(text.len(), text_encoder.symbol_count(), text_encoder).unwrap()
                             .set_suffix_array_config(SuffixArrayConfig::Compressed(ss)).unwrap()
                             .set_lookup_table_config(LookupTableConfig::KmerSize(lk)).unwrap();
                         let blob_size = builder.blob_size();
                         let mut blob = vec![0; blob_size];
                         builder.build(text.clone(), &mut blob).unwrap();
-                        let fi = FmIndex::<$pos, $blk>::load(&blob).unwrap();
+                        let fi = FmIndex::<$pos, $blk, EncodingTable>::load(&blob).unwrap();
                         let duration = start.elapsed();
                         println!(" - {}: built in {:?}s", tag, duration);
 
@@ -106,6 +111,7 @@ pub fn compare_locate_vs_locate_from_raw_index(c: &mut Criterion) {
                                     locate_multiple_patterns_from_raw_index(
                                         black_box(&fi),
                                         black_box(patterns),
+                                        black_box(&characters_by_index),
                                     );
                                 }
                             ));
