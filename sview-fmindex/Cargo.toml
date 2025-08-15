@@ -1,6 +1,6 @@
 [package]
 name = "sview-fmindex"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["baku4 <bahkhun@gmail.com>"]
 edition = "2024"
 license = "MIT"
@@ -34,7 +34,7 @@ zerocopy = { version = "0.8", features = ["derive"] }
 memmap2 = "0.9"
 
 # burrow-wheeler transform
-libdivsufsort-rs = { version = "0.1.4", optional = true }
+libdivsufsort-rs = { version = "0.1.5", optional = true }
 # with "bio" crate
 vec_map = "0.8"
 bit-set = "0.5"
