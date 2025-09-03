@@ -1,6 +1,10 @@
 use std::path::PathBuf;
 use std::io::{BufRead, Write};
-use sview_fmindex::{FmIndex, Block, blocks::{Block2, Block3}};
+use sview_fmindex::{
+    FmIndex, Block,
+    blocks::{Block2, Block3},
+    text_encoders::EncodingTable,
+};
 use crate::locate::{create_pattern_reader, create_result_writer, write_locations_to_file};
 
 fn locate_and_write_results<B: Block>(
@@ -12,7 +16,7 @@ fn locate_and_write_results<B: Block>(
     // Blob 로딩 시간 측정
     let load_start_time = std::time::Instant::now();
     let blob = std::fs::read(&blob_path)?;
-    let fm_index = FmIndex::<u32, B>::load(&blob)?;
+    let fm_index = FmIndex::<u32, B, EncodingTable>::load(&blob)?;
     let load_time = load_start_time.elapsed().as_nanos();
     
     let result_path = data_dir.join(format!("{}-results.txt", blob_stem));
@@ -25,7 +29,7 @@ fn locate_and_write_results<B: Block>(
 
     reader.lines().for_each(|line| {
         let pattern = line.unwrap();
-        let locations = fm_index.locate_pattern(pattern.as_bytes());
+        let locations = fm_index.locate(pattern.as_bytes());
         write_locations_to_file(&mut writer, &locations).unwrap();
     });
 

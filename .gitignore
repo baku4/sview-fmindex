@@ -2,7 +2,7 @@
 /target
 Cargo.lock
 
-# Bin
+# Benchmark Bin
 /bench/Cargo.lock
 /bench/test_data
 

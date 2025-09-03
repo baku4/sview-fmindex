@@ -2,7 +2,11 @@ use std::path::PathBuf;
 use std::io::{BufRead, Write};
 use std::fs;
 use memmap2::Mmap;
-use sview_fmindex::{FmIndex, Block, blocks::{Block2, Block3}};
+use sview_fmindex::{
+    FmIndex, Block,
+    blocks::{Block2, Block3},
+    text_encoders::EncodingTable,
+};
 use crate::locate::{create_pattern_reader, create_result_writer, write_locations_to_file};
 
 fn locate_and_write_results<B: Block>(
@@ -39,7 +43,7 @@ fn locate_and_write_results<B: Block>(
         }
     }
     
-    let fm_index = FmIndex::<u32, B>::load(&mmap)?;
+    let fm_index = FmIndex::<u32, B, EncodingTable>::load(&mmap)?;
     let load_time = load_start_time.elapsed().as_nanos();
     
     let result_path = data_dir.join(format!("{}-results.txt", blob_stem));
@@ -52,7 +56,7 @@ fn locate_and_write_results<B: Block>(
 
     reader.lines().for_each(|line| {
         let pattern = line.unwrap();
-        let locations = fm_index.locate_pattern(pattern.as_bytes());
+        let locations = fm_index.locate(pattern.as_bytes());
         write_locations_to_file(&mut writer, &locations).unwrap();
     });
 

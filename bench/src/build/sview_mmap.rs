@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use memmap2::MmapMut;
 use sview_fmindex::{
     FmIndexBuilder, blocks::{Block2, Block3},
+    text_encoders::EncodingTable,
     build_config::{LookupTableConfig, SuffixArrayConfig}
 };
 
@@ -44,10 +45,14 @@ pub fn build_index(
 
     // T를 와일드카드로 취급하면 Block2, 아니면 Block3 사용
     if treat_t_as_wildcard {
-        // Block2 사용 (ACG만 인덱싱)
-        let builder = FmIndexBuilder::<u32, Block2<u64>>::new(
+        let symbols: &[&[u8]] = &[b"Aa", b"Cc", b"Gg", b"Tt"];
+        let encoding_table = EncodingTable::from_symbols(symbols);
+        let symbol_count = encoding_table.symbol_count();
+        // Block2 사용
+        let builder = FmIndexBuilder::<u32, Block2<u64>, EncodingTable>::new(
             text.len(),
-            &symbols,
+            symbol_count,
+            encoding_table,
         )?
         .set_suffix_array_config(suffix_array_config)?
         .set_lookup_table_config(lookup_table_config)?;
@@ -81,10 +86,14 @@ pub fn build_index(
         
         println!("Index saved to: {}", output_path.display());
     } else {
-        // Block3 사용 (ACGT 모두 인덱싱)
-        let builder = FmIndexBuilder::<u32, Block3<u64>>::new(
+        let symbols: &[&[u8]] = &[b"Aa", b"Cc", b"Gg", b"Tt", b"Nn"];
+        let encoding_table = EncodingTable::from_symbols(symbols);
+        let symbol_count = encoding_table.symbol_count();
+        // Block3 사용
+        let builder = FmIndexBuilder::<u32, Block3<u64>, EncodingTable>::new(
             text.len(),
-            &symbols,
+            symbol_count,
+            encoding_table,
         )?
         .set_suffix_array_config(SuffixArrayConfig::Compressed(sasr as u32))?
         .set_lookup_table_config(LookupTableConfig::KmerSize(klts as u32))?;

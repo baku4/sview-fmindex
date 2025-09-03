@@ -1,5 +1,6 @@
 // Type 1: use crate 'bio'
 // This is default version
+#[allow(unused)]
 mod crate_bio_manual;
 // Type 2: use 'libdivsufsort'
 // Faster, but restrict the environment
