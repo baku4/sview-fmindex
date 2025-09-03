@@ -24,5 +24,5 @@ chrono = { version = "0.4", features = ["serde"] }
 memmap2 = "0.9"
 
 [features]
-default = []
+default = ["fastbwt"]
 fastbwt = ["sview-fmindex/fastbwt", "lt-fm-index/fastbwt"] 

@@ -39,13 +39,13 @@ pub fn generate_data(
     fs::write(&text_path, &text)?;
     println!("Text file created: {}", text_path.display());
 
-    // pattern.txt 파일 생성 (개행으로 구분)
+    // pattern.txt 파일 생성 (텍스트에서 실제 존재하는 패턴 추출)
     let pattern_path = data_dir.join("pattern.txt");
+    let max_start_index = text_length.saturating_sub(pattern_length);
     let patterns: Vec<Vec<u8>> = (0..pattern_count)
         .map(|_| {
-            (0..pattern_length)
-                .map(|_| nucleotides[rng.gen_range(0..4)])
-                .collect()
+            let start_index = rng.gen_range(0..=max_start_index);
+            text[start_index..start_index + pattern_length].to_vec()
         })
         .collect();
 

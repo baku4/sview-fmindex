@@ -48,11 +48,11 @@ pub fn locate_patterns(
     // 알고리즘별로 패턴 검색 실행
     let locate_start_time = std::time::Instant::now();
     match algorithm {
-        Algorithm::SviewMemory => {
-            sview_memory::locate_patterns(&data_dir, treat_t_as_wildcard)?;
-        }
         Algorithm::LtFmIndex => {
             crate_lt_fm_index::locate_patterns(&data_dir, treat_t_as_wildcard)?;
+        }
+        Algorithm::SviewMemory => {
+            sview_memory::locate_patterns(&data_dir, treat_t_as_wildcard)?;
         }
         Algorithm::SviewMmap => {
             sview_mmap::locate_patterns(&data_dir, treat_t_as_wildcard)?;

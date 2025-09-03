@@ -27,6 +27,7 @@ impl std::str::FromStr for Algorithm {
 
 const SYMBOLS_ACG: &[&[u8]] = &[b"Aa", b"Cc", b"Gg"];
 const SYMBOLS_ACGT: &[&[u8]] = &[b"Aa", b"Cc", b"Gg", b"Tt"];
+const SYMBOLS_ACGTN: &[&[u8]] = &[b"Aa", b"Cc", b"Gg", b"Tt", b"Nn"];
 
 pub fn build_indices(
     algorithm: Algorithm,
@@ -57,11 +58,11 @@ pub fn build_indices(
 
     // 알고리즘별로 인덱스 빌드
     match algorithm {
-        Algorithm::SviewMemory => {
-            sview_memory::build_index(&text, &data_dir, sasr, klts, treat_t_as_wildcard)?;
-        }
         Algorithm::LtFmIndex => {
             crate_lt_fm_index::build_index(&text, &data_dir, sasr, klts, treat_t_as_wildcard)?;
+        }
+        Algorithm::SviewMemory => {
+            sview_memory::build_index(&text, &data_dir, sasr, klts, treat_t_as_wildcard)?;
         }
         Algorithm::SviewMmap => {
             sview_mmap::build_index(&text, &data_dir, sasr, klts, treat_t_as_wildcard)?;
