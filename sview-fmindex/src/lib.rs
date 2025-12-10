@@ -13,6 +13,8 @@ pub use builder::{FmIndexBuilder, BuildError, build_config};
 /// FM-index is a data structure to locate all occurrences of a pattern in a text.
 #[derive(Clone, PartialEq, Eq)]
 pub struct FmIndex<'a, P: Position, B: Block, E: TextEncoder> {
+    // source blob data
+    source_blob: &'a [u8],
     // headers
     magic_number: components::MagicNumber,
     text_encoder: E,
@@ -31,6 +33,8 @@ mod load_from_blob;
 pub use load_from_blob::LoadError;
 //  - Count & locate pattern
 mod locate;
+//  - Reference to source blob data
+mod reference_to_source_blob;
 //  - Get debug info
 // mod debug;
 

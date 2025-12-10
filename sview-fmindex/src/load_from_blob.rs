@@ -73,6 +73,7 @@ impl<'a, P: Position, B: Block, E: TextEncoder> FmIndex<'a, P, B, E> {
         let bwm_view = BwmView::<P, B>::load_from_body::<B>(&bwm_header, &body_blob[body_start_index..body_end_index]);
 
         Ok(Self {
+            source_blob: blob,
             magic_number,
             text_encoder,
             count_array_header,
