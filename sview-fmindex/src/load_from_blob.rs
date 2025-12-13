@@ -23,7 +23,6 @@ pub enum LoadError {
     MismatchedBlobSize(usize, usize),
 }
 
-
 impl<'a, P: Position, B: Block, E: TextEncoder> FmIndex<'a, P, B, E> {
     /// Load fm-index from blob
     pub fn load(blob: &'a [u8]) -> Result<Self, LoadError> {
