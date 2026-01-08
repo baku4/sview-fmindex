@@ -87,25 +87,64 @@ assert_eq!(locations, vec![25,26]);
 
 ## Benchmarks
 
-### 1 Gbp nucleotide text · 20 bp pattern
+### 1 Gbp nucleotide text / 20 bp patterns (Cold Start)
 
-| Load strategy        | Avg RSS      | Peak RSS     | Blob load (ms) | Locate per pattern (ns) |
-| -------------------- | ------------ | ------------ | -------------- | ----------------------- |
-| Full in‑memory       | **2.82 GiB** | **4.50 GiB** | 2,388          | 1,369 ns                |
-| `mmap` (no `Advice`) | **0.48 GiB** | **0.52 GiB** | 0.04           | 1,365 ns                |
+Benchmarks comparing `mmap` vs full in-memory loading with **page cache cleared** before each test.
+
+#### Cold = 1% (99% repeated patterns)
+| Patterns | Blob | Elapsed (s) | Index Load (%) | Max RSS |
+|----------|------|-------------|----------------|---------|
+| 10 | in-memory | 3.39 | 95 | 2.63 GiB |
+| | **mmap** | **0.30** | 6 | 5.4 MB |
+| 1,000 | in-memory | 3.42 | 95 | 2.63 GiB |
+| | **mmap** | **2.21** | 1 | 29 MB |
+| 100,000 | **in-memory** | **3.55** | 91 | 2.63 GiB |
+| | mmap | 28.52 | 0 | 656 MB |
+
+#### Cold = 10% (90% repeated patterns)
+| Patterns | Blob | Elapsed (s) | Index Load (%) | Max RSS |
+|----------|------|-------------|----------------|---------|
+| 10 | in-memory | 3.37 | 96 | 2.63 GiB |
+| | **mmap** | **0.18** | 7 | 5.4 MB |
+| 1,000 | **in-memory** | **3.35** | 96 | 2.63 GiB |
+| | mmap | 8.02 | 0 | 197 MB |
+| 100,000 | **in-memory** | **3.56** | 91 | 2.63 GiB |
+| | mmap | 67.53 | 0 | 1.15 GiB |
+
+#### Cold = 100% (all unique patterns)
+| Patterns | Blob | Elapsed (s) | Index Load (%) | Max RSS |
+|----------|------|-------------|----------------|---------|
+| 10 | in-memory | 3.40 | 96 | 2.63 GiB |
+| | **mmap** | **1.85** | 0 | 29 MB |
+| 1,000 | **in-memory** | **3.35** | 96 | 2.63 GiB |
+| | mmap | 28.17 | 0 | 657 MB |
+| 100,000 | **in-memory** | **3.66** | 88 | 2.63 GiB |
+| | mmap | 131.15 | 0 | 2.39 GiB |
+
+#### When to use `mmap`
+- Few queries
+- Many repeated patterns
+- Memory constrained
+
+#### When to use full in-memory
+- Many unique queries
+- Batch processing (page faults in mmap cause significant overhead)
 
 <details>
 <summary>Test setup</summary>
 
 - **Data**
-  - **Text:** 1 Gbp random nucleotide
-  - **Patterns:** 1 000 000 × 20 bp
-  - **Index:** Position: `u32`, Block: `Block2<u64>`, Uncompressed
-- **Hardware**
-  - **CPU** Intel Xeon E5‑2680 v4 @ 2.40 GHz
-  - **Memory** 256 GiB
-  - **OS (Kernel)** Ubuntu 20.04.2 LTS (5.4.0‑171‑generic)
-  - **Page size** 4 KiB
+  - **Text:** 1 Gbp random nucleotide (seed: 42)
+  - **Patterns:** 20 bp, extracted from text
+  - **Cold ratio:** percentage of unique patterns (rest are repeated)
+  - **Index:** Position: `u32`, Block: `Block3<u64>`, SA sampling ratio: 2, kLTS: 3
+- **Environment**
+  - **CPU:** Intel Xeon E5-2680 v4 @ 2.40 GHz
+  - **Memory:** 256 GiB
+  - **OS:** Ubuntu 20.04.2 LTS (5.4.0-171-generic)
+  - **Page cache:** Cleared (`echo 3 > /proc/sys/vm/drop_caches`) before each test
+- **Reproduce:** `cd bench && sudo ./run_benchmark.sh`
+- **Note:** Performance is nearly identical to [`lt-fm-index`](https://github.com/baku4/lt-fm-index) when using in-memory loading.
 </details>
 
 ## References
